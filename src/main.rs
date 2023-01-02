@@ -3,12 +3,11 @@ extern crate clipboard;
 use clipboard::ClipboardProvider;
 use clipboard::ClipboardContext;
 
-fn example() {
+fn get_clipboard_conts() -> String {
     let mut ctx: ClipboardContext = ClipboardProvider::new().unwrap();
-    println!("{:?}", ctx.get_contents());
-    ctx.set_contents("some string".to_owned()).unwrap();
+    ctx.get_contents().unwrap()
 }
 
 fn main() {
-    example();
+    println!("{}", get_clipboard_conts());
 }
