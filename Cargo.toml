@@ -2,7 +2,13 @@
 name = "clipshare"
 version = "0.1.0"
 edition = "2021"
+authors = ["Joseph Diza <josephm.diza@gmail.com>"]
+license = "MIT"
+repository = "https://github.com/jmdaemon/clipshare"
+homepage = "https://github.com/jmdaemon/clipshare"
+description = "Share your clipboard contents across devices"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+clipboard = "0.5.0"
