@@ -1,29 +1,17 @@
-//! A simple example of hooking up stdin/stdout to a WebSocket stream.
-//!
-//! This example will connect to a server specified in the argument list and
-//! then forward all data read on stdin to the server, printing out all data
-//! received on stdout.
-//!
-//! Note that this is not currently optimized for performance, especially around
-//! buffer management. Rather it's intended to show an example of working with a
-//! client.
-//!
-//! You can use this example together with the `server` example.
-
 use std::env;
 
-use futures_util::{future, pin_mut, StreamExt};
+use futures::{future, pin_mut, StreamExt, channel};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio_tungstenite::{connect_async, tungstenite::protocol::Message};
 
 #[tokio::main]
 async fn main() {
     let connect_addr =
-        env::args().nth(1).unwrap_or_else(|| panic!("this program requires at least one argument"));
+        env::args().nth(1).unwrap_or_else(|| panic!("Usage: cargo run --bin client 127.0.0.1:12345"));
 
     let url = url::Url::parse(&connect_addr).unwrap();
 
-    let (stdin_tx, stdin_rx) = futures_channel::mpsc::unbounded();
+    let (stdin_tx, stdin_rx) = channel::mpsc::unbounded();
     tokio::spawn(read_stdin(stdin_tx));
 
     let (ws_stream, _) = connect_async(url).await.expect("Failed to connect");
@@ -45,7 +33,7 @@ async fn main() {
 
 // Our helper method which will read data from stdin and send it along the
 // sender provided.
-async fn read_stdin(tx: futures_channel::mpsc::UnboundedSender<Message>) {
+async fn read_stdin(tx: channel::mpsc::UnboundedSender<Message>) {
     let mut stdin = tokio::io::stdin();
     loop {
         let mut buf = vec![0; 1024];
