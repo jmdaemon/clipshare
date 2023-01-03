@@ -1,74 +1,59 @@
+//! A simple example of hooking up stdin/stdout to a WebSocket stream.
+//!
+//! This example will connect to a server specified in the argument list and
+//! then forward all data read on stdin to the server, printing out all data
+//! received on stdout.
+//!
+//! Note that this is not currently optimized for performance, especially around
+//! buffer management. Rather it's intended to show an example of working with a
+//! client.
+//!
+//! You can use this example together with the `server` example.
+
 use std::env;
 
-use bytes::Bytes;
-use http_body_util::{BodyExt, Empty};
-use hyper::Request;
-use tokio::io::{self, AsyncWriteExt as _};
-use tokio::net::TcpStream;
-
-// A simple type alias so as to DRY.
-type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
+use futures_util::{future, pin_mut, StreamExt};
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio_tungstenite::{connect_async, tungstenite::protocol::Message};
 
 #[tokio::main]
-async fn main() -> Result<()> {
-    pretty_env_logger::init();
+async fn main() {
+    let connect_addr =
+        env::args().nth(1).unwrap_or_else(|| panic!("this program requires at least one argument"));
 
-    // Some simple CLI args requirements...
-    let url = match env::args().nth(1) {
-        Some(url) => url,
-        None => {
-            println!("Usage: client <url>");
-            return Ok(());
-        }
+    let url = url::Url::parse(&connect_addr).unwrap();
+
+    let (stdin_tx, stdin_rx) = futures_channel::mpsc::unbounded();
+    tokio::spawn(read_stdin(stdin_tx));
+
+    let (ws_stream, _) = connect_async(url).await.expect("Failed to connect");
+    println!("WebSocket handshake has been successfully completed");
+
+    let (write, read) = ws_stream.split();
+
+    let stdin_to_ws = stdin_rx.map(Ok).forward(write);
+    let ws_to_stdout = {
+        read.for_each(|message| async {
+            let data = message.unwrap().into_data();
+            tokio::io::stdout().write_all(&data).await.unwrap();
+        })
     };
 
-    // HTTPS requires picking a TLS implementation, so give a better
-    // warning if the user tries to request an 'https' URL.
-    let url = url.parse::<hyper::Uri>().unwrap();
-    //if url.scheme_str() != Some("http") {
-        //println!("This example only works with 'http' URLs.");
-        //return Ok(());
-    //}
-
-    fetch_url(url).await
+    pin_mut!(stdin_to_ws, ws_to_stdout);
+    future::select(stdin_to_ws, ws_to_stdout).await;
 }
 
-async fn fetch_url(url: hyper::Uri) -> Result<()> {
-    let host = url.host().expect("uri has no host");
-    let port = url.port_u16().unwrap_or(80);
-    let addr = format!("{}:{}", host, port);
-    let stream = TcpStream::connect(addr).await?;
-
-    let (mut sender, conn) = hyper::client::conn::http1::handshake(stream).await?;
-    tokio::task::spawn(async move {
-        if let Err(err) = conn.await {
-            println!("Connection failed: {:?}", err);
-        }
-    });
-
-    let authority = url.authority().unwrap().clone();
-
-    let req = Request::builder()
-        .uri(url)
-        .header(hyper::header::HOST, authority.as_str())
-        .body(Empty::<Bytes>::new())?;
-
-    let mut res = sender.send_request(req).await?;
-
-    println!("Response: {}", res.status());
-    println!("Headers: {:#?}\n", res.headers());
-
-    // Stream the body, writing each chunk to stdout as we get it
-    // (instead of buffering and printing at the end).
-    while let Some(next) = res.frame().await {
-        let frame = next?;
-        if let Some(chunk) = frame.data_ref() {
-            io::stdout().write_all(&chunk).await?;
-        }
+// Our helper method which will read data from stdin and send it along the
+// sender provided.
+async fn read_stdin(tx: futures_channel::mpsc::UnboundedSender<Message>) {
+    let mut stdin = tokio::io::stdin();
+    loop {
+        let mut buf = vec![0; 1024];
+        let n = match stdin.read(&mut buf).await {
+            Err(_) | Ok(0) => break,
+            Ok(n) => n,
+        };
+        buf.truncate(n);
+        tx.unbounded_send(Message::binary(buf)).unwrap();
     }
-
-    println!("\n\nDone!");
-
-    Ok(())
 }
-
