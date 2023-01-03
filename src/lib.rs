@@ -15,10 +15,6 @@ const QUALIFIER: &str = "com";
 const ORGANIZATION: &str = "jmdaemon";
 const APPLICATION: &str = "clipshare";
 
-//const PROJ_DIRS: ProjectDirs = ProjectDirs::from("com", "jmdaemon",  "clipshare").unwrap();
-//const CONFIG_FILE: Path = std::path::Path::new(&format!("{}/{}", PROJ_DIRS.config_dir(), "config.json"));
-//const CONFIG_FILE: Path = Path::new(format!("{}/{}", PROJ_DIRS.config_dir(), "config.json"));
-
 // Data Structures
 type Shortcuts = HashMap<String, String>;
 
@@ -38,9 +34,6 @@ pub struct Device {
 }
 
 // Implementations
-
-//impl UnifiedClipboard { }
-
 impl Device {
     pub fn new(name: String, history: Vec<String>, clipboard: ClipboardContext) -> Device {
         Device { name, history, clipboard }
@@ -99,22 +92,6 @@ pub fn get_proj_dirs() -> ProjectDirs {
 }
 
 pub fn mk_cfg_dir() {
-    //let proj_dirs = ProjectDirs::from("com", "jmdaemon",  "clipshare").unwrap();
-    //let cfg_dir: Path = PROJ_DIRS.config_dir();
-
-    //if !cfg_dir.exists() {
-        //fs::create_dir(cfg_dir);
-    //}
-
-    //let cfg_dir = PROJ_DIRS.config_dir();
-
-    //cfg_dir.exists();
-
-    //if !(&cfg_dir).exists() {
-        //fs::create_dir(cfg_dir);
-    //}
-
-    //let proj_dirs = ProjectDirs::from(QUALIFIER, ORGANIZATION, APPLICATION).unwrap();
     let proj_dirs = get_proj_dirs();
     let cfg_dir = proj_dirs.config_dir();
     if !cfg_dir.exists() {
@@ -122,18 +99,13 @@ pub fn mk_cfg_dir() {
     }
 }
 
-
 pub fn get_cfgfp() -> String {
-    //format!("{}/{}", PROJ_DIRS.config_dir().to_str().unwrap(), "config.json")
-    //format!("{}/{}", PROJ_DIRS.config_dir().to_str().unwrap(), "config.json")
     let proj_dirs = get_proj_dirs();
     format!("{}/{}", proj_dirs.config_dir().to_str().unwrap(), "config.json")
 }
 
-//pub fn load_config(cfg_dir: &Path) -> Config{
 /// Loads the cached config file
 pub fn load_config() -> Config {
-    //let cfgfp = Path::new(&get_cfgfp());
     let cfgfp = get_cfgfp();
     let cfgfp = Path::new(&cfgfp);
 
@@ -141,11 +113,9 @@ pub fn load_config() -> Config {
     let cfg_conts: String;
     if !cfgfp.exists() {
         cfg = Config::default();
-        //let cfg_json = serde_json::to_string(&cfg).unwrap();
         cfg_conts = serde_json::to_string(&cfg).unwrap();
         save_config(&cfg);
     } else {
-        //let cfg_conts = read_to_string(cfgfp).expect("Could not read config file");
         cfg_conts = read_to_string(cfgfp).expect("Could not read config file");
         cfg = serde_json::from_str(&cfg_conts).unwrap();
     }
@@ -156,7 +126,6 @@ pub fn load_config() -> Config {
 /// Save the config to disk
 pub fn save_config(cfg: &Config) {
     let cfgfp = get_cfgfp();
-    //let cfg_json = serde_json::to_string(&cfg).unwrap();
     let cfg_json = serde_json::to_string_pretty(&cfg).unwrap();
     mk_cfg_dir();
     fs::write(cfgfp, cfg_json).expect("Unable to write file.");
