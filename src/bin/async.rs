@@ -1,17 +1,22 @@
 //extern crate bus;
+
+
 use std::{thread, vec};
+use futures::TryFutureExt;
+use log::warn;
 //use async_channel::{Sender, Receiver, SendError, RecvError};
-use tokio::sync::oneshot;
-use tokio::sync::oneshot::{Sender, Receiver};
+use tokio::sync::broadcast;
+use tokio::sync::broadcast::error::{SendError, RecvError};
+use tokio::sync::broadcast::{Sender, Receiver};
+use tokio::time::{Duration};
 
 // Execution model
 // We send clipboard events over this channel
 // we also listen for clipboard events over this channel
 
+#[derive(Debug, Clone)]
 pub enum ClipboardEvent {
-    Nothing,
-    UpdateSent(String),
-    UpdateReceived(String),
+    ReceiveCopied(String),
 }
 
 pub struct ClipboardChannel {
@@ -21,103 +26,83 @@ pub struct ClipboardChannel {
 
 impl ClipboardChannel {
     pub fn new() -> ClipboardChannel {
-    //let (s, r) = async_channel::unbounded();
-    let (s, r): (Sender<ClipboardEvent>, Receiver<ClipboardEvent>) = oneshot::channel();
+        let (s, r): (Sender<ClipboardEvent>, Receiver<ClipboardEvent>) = broadcast::channel(32);
         ClipboardChannel { s, r }
     }
 }
 
 /// Callback to notify listeners for a clipboard update
-//pub async fn cb_send_update(tx: Sender<ClipboardEvent>, last_copied: String) -> Result<(), SendError<ClipboardEvent>> {
-    //let event = ClipboardEvent::UpdateSent(last_copied);
-    //tx.send(event).await
-//}
+pub fn cb_send_update(r: Sender<ClipboardEvent>, last_copied: &str) -> Result<usize, SendError<ClipboardEvent>> {
+    let event = ClipboardEvent::ReceiveCopied(String::from(last_copied));
+    r.send(event)
+}
 
-///// Callback to parse notification from senders for a clipboard update
-//pub async fn cb_receive_update(rx: Receiver<ClipboardEvent>) -> Result<ClipboardEvent, RecvError>{
-    //rx.recv().await
-//}
+/// Callback to parse notification from senders for a clipboard update
+pub async fn cb_receive_update(r: &mut Receiver<ClipboardEvent>) {
+    let res = r.recv().await.unwrap();
+    match res {
+        ClipboardEvent::ReceiveCopied(last_copied) => {
+            println!("Received {}", last_copied);
+        }
+    }
+}
 
 #[tokio::main]
 async fn main() {
+    // Setup the broadcast channel
     let cb_chan = ClipboardChannel::new();
-    let (s, r) = (cb_chan.s, cb_chan.r);
+    let (s, mut r) = (cb_chan.s, cb_chan.r);
 
-    s.send(ClipboardEvent::UpdateSent(String::from("asdf")));
+    // Setup our subscribers
+    let mut dev_r2 = s.subscribe();
+    let mut dev_r3 = s.subscribe();
 
-    let res = r.await.unwrap();
-
-    match res {
-        ClipboardEvent::UpdateSent(last_copied) => {
-            //let msg = format!("Thread {} sent: {}", thread_count, last_copied);
-            //println!("{}", msg);
-            //messages.push(msg);
-            //println!("Sent {}", last_copied);
-            println!("Received {}", last_copied);
-        }
-        ClipboardEvent::UpdateReceived(last_copied) => {
-            //let msg = format!("Thread {} received: {}", thread_count, last_copied);
-            //println!("{}", msg);
-            //messages.push(msg);
-            //println!("Received {}", last_copied);
-        }
-        _ => {}
-    }
+    let last_copied = "string-to-be-copied";
 
 
-    
+    // Our subscribers will poll for data, the data will be moved in here
+    let handle_dev1 = tokio::spawn(async move {
+            cb_receive_update(&mut r).await;
+        }).unwrap_or_else(|_| {});
+    let handle_dev2 = tokio::spawn(async move {
+            cb_receive_update(&mut dev_r2).await;
+        }).unwrap_or_else(|_| {});
+    let handle_dev3 = tokio::spawn(async move {
+            cb_receive_update(&mut dev_r3).await;
+        }).unwrap_or_else(|_| {});
+    let handle_wait = async move {
+            tokio::time::sleep(Duration::from_secs(5)).await;
+        };
 
-    /*
-    let mut messages = vec![];
-    let mut threads = vec![];
-    let mut thread_count = 2;
-
-    // Setup listeners
-    for thread_id in 0..thread_count {
-        // Create multiple listeners
-        //let rx = cb_chan.rx;
-        let rx = cb_chan.r.clone();
-        let thread = thread::spawn(move || {
-            //threads.push(thread_id);
-            //let res = rx.recv().unwrap_or(ClipboardEvent::Nothing);
-            let res = rx.recv().await.unwrap_or(ClipboardEvent::Nothing);
-
-            // Parse request
-            match res {
-                ClipboardEvent::UpdateSent(last_copied) => {
-                    let msg = format!("Thread {} sent: {}", thread_count, last_copied);
-                    println!("{}", msg);
-                    messages.push(msg);
+    let handle_sender = async move {
+            match cb_send_update(s, last_copied) {
+                Ok(_) => {},
+                Err(e) => {
+                    eprintln!("Could not send data.");
+                    eprintln!("Error: {}", e);
                 }
-                ClipboardEvent::UpdateReceived(last_copied) => {
-                    let msg = format!("Thread {} received: {}", thread_count, last_copied);
-                    println!("{}", msg);
-                    messages.push(msg);
-                }
-                _ => {}
             }
-            //println!("Thread {} received {}", thread_id, res.unwrap_or("Nothing"));
-        });
-        threads.push(thread);
-    }
+    };
 
-    // Setup senders
-    thread_count += 1;
-    let thread_sender = thread::spawn(move || {
-        // Send update
-        //cb_send_update(cb_chan.tx, String::from("string-to-be-copied"));
-        cb_send_update(cb_chan., String::from("string-to-be-copied"));
-    });
-    //threads.push(thread_count);
-    threads.push(thread_sender);
-    
-    // Send an update
-    //cb_send_update(cb_chan.tx, String::from("string-to-be-copied"));
-    //cb_send_update(cb_chan.tx, String::from("string-to-be-copied"));
 
-    // Perform the execution
-    for thread in threads {
-        thread.join().expect("oops! the child thread panicked");
-    }
-    */
+    tokio::join!(
+        // Spawn three separate subscribers
+        handle_wait,    // Wait a bit
+        handle_dev1,
+        handle_dev2,
+        handle_dev3,
+        handle_sender,  // Send one update
+    );
+    //tokio::spawn(async move {
+        //cb_receive_update(&mut r).await;
+    //});
+    //tokio::spawn(async move {
+        //cb_receive_update(&mut dev_r2).await;
+    //});
+    //tokio::spawn(async move {
+        //cb_receive_update(&mut dev_r3).await;
+    //});
+
+    // Send the data if possible
+    //cb_receive_update(&mut r).await;
 }
