@@ -1,3 +1,5 @@
+mod pubsub;
+
 use std::{
     fs,
     fs::read_to_string,
@@ -5,11 +7,12 @@ use std::{
     collections::HashMap,
 };
 
-use directories::{BaseDirs, UserDirs, ProjectDirs};
+use directories::ProjectDirs;
 use clipboard::{ClipboardContext, ClipboardProvider};
 use serde::{Serialize, Deserialize};
 
 #[macro_use] extern crate log;
+
 
 const QUALIFIER: &str = "com";
 const ORGANIZATION: &str = "jmdaemon";
@@ -23,9 +26,11 @@ type Shortcuts = HashMap<String, String>;
     //pub last_copied: String,
 //}
 
-//pub struct App {
+pub struct App {
     //pub global_cb: UnifiedClipboard,
-//}
+    pub current_device: Device,
+    pub last_copied: String,
+}
 
 pub struct Device {
     pub name: String,
