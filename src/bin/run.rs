@@ -21,6 +21,7 @@ use tokio::{
 };
 use tokio_tungstenite::{connect_async, tungstenite::protocol::Message};
 
+// Types
 type Tx = UnboundedSender<Message>;
 type PeerMap = Arc<Mutex<HashMap<SocketAddr, Tx>>>;
 
@@ -167,78 +168,30 @@ async fn main() {
     //let mut dev_r3 = s.subscribe();
 
     //let last_copied = "string-to-be-copied";
+    // TODO: Need to make broadcast channel to signal and notify clipboard changes to server thread
+    // TODO: Need to send multiple client connections to other devices
+    // TODO: Need to make function to add client/remove device clients.
 
     // We want to set up our devices 
+
+    // Set up our server to listen for incoming connections
     let addr = env::args().nth(1).unwrap_or_else(|| "127.0.0.1:8080".to_string());
     let server = setup_server(addr.clone());
 
+    // TODO: Load the cached device configs and 
+    // Have other devices connect to our device as a server
     let mut clients = vec![];
     for i in 0..3 {
         println!("Setup client #{}", i+1);
         let url = format!("ws://{}", addr.clone());
         clients.push(setup_client(url));
     }
-    //for _ in 0..3 {
-        //setup_client(&addr).await;
-    //}
-    //let client_handles = tokio::spawn(
-        //async move {
-            //for i in 0..3 {
-                //println!("Setup client #{}", i);
-                //let url = format!("ws://{}", addr.clone());
-                //setup_client(url).await;
-            //}
-        //}).unwrap_or_else(|_| {});
-    
-    //server.await;
-    //let a = clients.get_mut(0).unwrap();
-    //let a = clients.get_mut(0);
+
+    // Send client connection requests to other devices
+
     let state = PeerMap::new(Mutex::new(HashMap::new()));
     tokio::join!(
         join_all(clients),
         poll_client_connections(server.await, state),
-        //client_handles,
-        //&clients[0],
-        
-
         );
-
-
-    //let client = 
-
-    // Our subscribers will poll for data, the data will be moved in here
-    //let handle_dev1 = tokio::spawn(async move {
-            //cb_receive_update(&mut r).await;
-        //}).unwrap_or_else(|_| {});
-    //let handle_dev2 = tokio::spawn(async move {
-            //cb_receive_update(&mut dev_r2).await;
-        //}).unwrap_or_else(|_| {});
-    //let handle_dev3 = tokio::spawn(async move {
-            //cb_receive_update(&mut dev_r3).await;
-        //}).unwrap_or_else(|_| {});
-    //let handle_wait = async move {
-            //tokio::time::sleep(Duration::from_secs(5)).await;
-        //};
-
-    //let handle_sender = async move {
-            //match cb_send_update(s, last_copied) {
-                //Ok(_) => {},
-                //Err(e) => {
-                    //eprintln!("Could not send data.");
-                    //eprintln!("Error: {}", e);
-                //}
-            //}
-    //};
-
-
-    //tokio::join!(
-        //// Spawn three separate subscribers
-        ////handle_wait,    // Wait a bit
-        //handle_dev1,
-        //handle_dev2,
-        //handle_dev3,
-    //);
-    //handle_wait.await;
-    ////handle_sender,  // Send one update
-    //handle_sender.await; // Send one update
 }
