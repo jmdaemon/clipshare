@@ -1,4 +1,4 @@
-mod pubsub;
+mod ws;
 
 use std::{
     fs,
