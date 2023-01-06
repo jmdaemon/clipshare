@@ -24,8 +24,8 @@ async fn handle_connection(peer_map: PeerMap, raw_stream: TcpStream, addr: Socke
     println!("WebSocket connection established: {}", addr);
 
     // Insert the write part of this peer to the peer map.
-    let (tx, rx) = unbounded();
-    peer_map.lock().unwrap().insert(addr, tx);
+    let (sender, receiver) = unbounded();
+    peer_map.lock().unwrap().insert(addr, sender);
 
     let (outgoing, incoming) = ws_stream.split();
 
@@ -44,7 +44,7 @@ async fn handle_connection(peer_map: PeerMap, raw_stream: TcpStream, addr: Socke
         future::ok(())
     });
 
-    let receive_from_others = rx.map(Ok).forward(outgoing);
+    let receive_from_others = receiver.map(Ok).forward(outgoing);
 
     pin_mut!(broadcast_incoming, receive_from_others);
     future::select(broadcast_incoming, receive_from_others).await;
@@ -53,21 +53,39 @@ async fn handle_connection(peer_map: PeerMap, raw_stream: TcpStream, addr: Socke
     peer_map.lock().unwrap().remove(&addr);
 }
 
+async fn setup_server(addr: String) -> TcpListener {
+
+    // Create the event loop and TCP listener we'll accept connections on.
+    let try_socket = TcpListener::bind(addr.clone()).await;
+    let listener = try_socket.expect("Failed to bind");
+    println!("Listening on: {}", addr);
+    listener
+}
+
+async fn spawn_server_conn(srv: TcpListener, state: PeerMap) {
+    while let Ok((stream, addr)) = srv.accept().await {
+        tokio::spawn(handle_connection(state.clone(), stream, addr));
+    }
+}
+
 #[tokio::main]
 async fn main() -> Result<(), IoError> {
     let addr = env::args().nth(1).unwrap_or_else(|| "127.0.0.1:8080".to_string());
 
     let state = PeerMap::new(Mutex::new(HashMap::new()));
+    //let srv = setup_server(addr).await;
 
-    // Create the event loop and TCP listener we'll accept connections on.
-    let try_socket = TcpListener::bind(&addr).await;
+    let try_socket = TcpListener::bind(addr.clone()).await;
     let listener = try_socket.expect("Failed to bind");
     println!("Listening on: {}", addr);
 
+    //let conn = spawn_server_conn(srv, state).await;
+    let conn = spawn_server_conn(listener, state).await;
+
     // Let's spawn the handling of each connection in a separate task.
-    while let Ok((stream, addr)) = listener.accept().await {
-        tokio::spawn(handle_connection(state.clone(), stream, addr));
-    }
+    //while let Ok((stream, addr)) = srv.accept().await {
+        //tokio::spawn(handle_connection(state.clone(), stream, addr));
+    //}
 
     Ok(())
 }
