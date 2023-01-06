@@ -1,79 +1,42 @@
 use std::fmt;
 
-// Watch/Subscribe (to) our device clipboards' contents
-// If the contents have changed
-// Notify/Publish the changes to UnifiedClipboard
+/*
+ * 1. Initialize event bus
+ * 2. Create async task: notify_changed() -> { Send ClipboardEvent::LastCopiedChanged() }
+ * 3. Create async task: on_changed() -> { Listen for ClipboardEvent::LastCopiedChanged(), and send App::UpdateClientRequest(String) }
+ * 4. In server, listen for App events, and notify to all clients
+ * 5. In client, listen for App event, and sync local changes to current_device clipboard
+ */
 
-// Watch the last_copied string
-// If the contents change
-// Then for each device clipboard,
-//      send out the last_copied String
-
-// If we get a new post/receive some new data 
-// Interpret message/response
-// Set current device's clipboard to the new data
-
-// We need to use a websocket for bidirectional communication
-// We need to setup two services, one to act as the server, and another for the client.
 pub struct Address {
     pub ip: String,
     pub port: u32,
 }
 
-// Traits
-// - connect
-
-// Threading:
-// We'll need at least 3 threads to do io
-// 1. Thread to run the main GUI rendering
-// 2. Another thread to run the client/server websocket
 pub struct Client {
     pub addr: Address,
-    // Channel
-}
-
-impl Client {
-    pub fn connect(&self, to: &Server) {
-        // Set up websocket connection to available server devices
-        // We will send the response to accept the connection with the server on our client
-        //if let Err(error) = listen(to.addr.fmt(), |out| {
-        // The handler needs to take ownership of out, so we use move
-
-        //move |msg| {
-            //// Handle messages received on this connection
-            //println!("Server got message '{}'. ", msg);
-
-            //// Use the out channel to send messages back
-            //out.send(msg)
-        //}
-    //}) {
-        //// Inform the user of failure
-        //println!("Failed to create WebSocket due to {:?}", error);
-    //}
-    //}
-
-    //pub fn receive(&self, _src: &Device) {
-        //// Receive the clipboard contents from the src device
-    //}
-    }
 }
 
 pub struct Server {
     pub addr: Address,
-    // Separate Channel
 }
 
-impl Server {
-    pub fn connect(&self) {
-        // Set up websocket connection to available client devices
-        // We will send the request to connect to available devices
-    }
+// Implementations
 
-    pub fn send(&self, _dest: &Device) {
-        // Send clipboard contents from our device to the dest device
+// In the future, more features may be desired such as the ability to send over more than just copied
+// clipboard text, but also files. May require another interface.
 
-    }
-}
+// TODO: Implement pairing request functionality
+// TODO: Implement server event bus notifying 
+// TODO: Implement server pair_request function 
+// Sends the signal to the server, that when detected & matched for, adds the client to the current vector of futures)
+// Use two async tasks for this, one to add, one to listen for client additions
+// enum: AddDevice, RemoveDevice
+
+// TODO: Implement local device ip/scan for quickly adding detected devices.
+// TODO: Implement bluetooth scanning
+
+// TODO: Cache device configuration details to disk. Use serde
 
 impl Address {
     pub fn fmt(&self) -> String {
@@ -86,3 +49,6 @@ impl fmt::Display for Address {
         write!(f, "{}", self.fmt())
     }
 }
+
+impl Client { }
+impl Server { }
