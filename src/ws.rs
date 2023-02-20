@@ -42,6 +42,16 @@ impl Address {
     pub fn fmt(&self) -> String {
         format!("{}:{}", self.ip, self.port)
     }
+
+    pub fn from_str(s: String) -> Address {
+        let addr_vec: Vec<&str> = s.split(":").collect();
+        //let ip = addr_vec[0];
+        //let port: u32 = addr_vec[1].parse().unwrap();
+        let (ip, port) = (addr_vec[0], addr_vec[1].parse().unwrap());
+        //let port: u32 = addr_vec[1].parse().unwrap();
+
+        Address { ip: ip.to_owned(), port }
+    }
 }
 
 impl fmt::Display for Address {
