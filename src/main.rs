@@ -1,6 +1,6 @@
-use clipshare::{Device, init_device, load_config};
+pub mod ws;
 
-#[macro_use] extern crate log;
+use clipshare::{Device, init_device, load_config};
 
 fn test_clipboard(dev: &mut Device) {
     println!("{}", dev.get_clipboard_conts());
