@@ -1,5 +1,7 @@
 pub mod ws;
 
+use log::info;
+
 use clipshare::{Device, init_device, load_config};
 
 fn test_clipboard(dev: &mut Device) {
@@ -10,6 +12,7 @@ fn test_clipboard(dev: &mut Device) {
 
 fn main() {
     pretty_env_logger::init();
+    info!("Copying to clipboard");
 
     let cfg = load_config();
     let mut dev = init_device();

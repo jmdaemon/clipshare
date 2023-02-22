@@ -100,8 +100,10 @@ pub fn mk_cfg_dir() {
     let proj_dirs = get_proj_dirs();
     let cfg_dir = proj_dirs.config_dir();
     if !cfg_dir.exists() {
-        fs::create_dir(cfg_dir).expect("Could not create config file");
+        fs::create_dir_all(cfg_dir).expect("Could not create config file");
+        info!("Created {}", cfg_dir.display());
     }
+    info!("Using config directory: {}", cfg_dir.display());
 }
 
 pub fn get_cfgfp() -> String {
