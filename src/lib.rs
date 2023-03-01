@@ -1,4 +1,6 @@
 pub mod ws;
+pub mod widgets;
+pub mod consts;
 
 use std::{
     fs,
