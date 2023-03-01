@@ -1,4 +1,3 @@
-
 use std::{
     fmt,
     collections::HashMap,
@@ -22,6 +21,7 @@ use tokio::{
     time::Duration,
 };
 use tokio_tungstenite::{connect_async, tungstenite::protocol::Message};
+use local_ip_address::local_ip;
 
 /*
  * 1. Initialize event bus
@@ -98,9 +98,12 @@ impl fmt::Display for Address {
 }
 
 impl Client { }
-impl Server { }
-
-
+impl Server {
+    pub fn get_ip_addr() -> Address {
+        let my_local_ip = local_ip().unwrap();
+        Address::from_str(my_local_ip.to_string())
+    }
+}
 
 // Async
 impl ClipboardChannel {
