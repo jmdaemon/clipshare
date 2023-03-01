@@ -59,40 +59,36 @@ impl SimpleComponent for App {
                     set_hexpand: true,
                     set_vexpand: true,
 
-                    gtk::StackSidebar {
-                        set_stack = &gtk::Stack {
-                            //set_size_request: (500, 500),
+                    gtk::Notebook {
+                        set_hexpand: true,
+                        set_vexpand: true,
+
+                        // Home View
+                        append_page[Some(&gtk::Label::new(Some("Main")))] = &gtk::Box {
+                            set_orientation: gtk::Orientation::Horizontal,
+                            set_margin_all: 5,
+                            set_size_request: (100, 100),
                             set_hexpand: true,
                             set_vexpand: true,
 
-                            // Home View
-                            add_child = &gtk::Box {
-                                set_orientation: gtk::Orientation::Horizontal,
-                                set_margin_all: 5,
-                                set_size_request: (100, 100),
-                                set_hexpand: true,
-                                set_vexpand: true,
 
-
-                                gtk::Label {
-                                    set_label: "Main"
-                                },
-                            } -> {
-                                set_title: "Main",
-                                set_name: "Main",
+                            gtk::Label {
+                                set_label: "Main"
                             },
+                        },
+                        //} -> {
+                            //set_tab_label: "Main",
+                            //set_title: "Main",
+                            //set_name: "Main",
+                        //},
 
-                            // Example Device 1
-                            add_child = &gtk::ScrolledWindow {
-                                set_size_request: (300, 300),
-                                set_hexpand: true,
-                                set_vexpand: true,
-                                gtk::Label {
-                                    set_label: "Example Device 1",
-                                },
-                            } -> {
-                                set_title: "Example Device 1",
-                                set_name: "Example Device 1",
+                        // Example Device 1
+                        append_page[Some(&gtk::Label::new(Some("Example Device 1")))] = &gtk::ScrolledWindow {
+                            set_size_request: (300, 300),
+                            set_hexpand: true,
+                            set_vexpand: true,
+                            gtk::Label {
+                                set_label: "Example Device 1",
                             },
                         },
                     },
