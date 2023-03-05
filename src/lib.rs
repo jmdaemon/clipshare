@@ -1,3 +1,4 @@
+pub mod app;
 pub mod ws;
 pub mod widgets;
 pub mod consts;
