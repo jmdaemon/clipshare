@@ -1,3 +1,5 @@
+use std::net::Ipv4Addr;
+
 use mdns_sd::{ServiceEvent, ServiceInfo};
 
 pub const SERVICE_TYPE: &str = "_clipshare._udp.local.";
@@ -21,10 +23,26 @@ pub fn server_create_service() -> Result<ServiceInfo, mdns_sd::Error> {
     )
 }
 
+pub fn connect_device(addr: Ipv4Addr) {
+}
+
+/// Clients will poll for any devices using the service
+/// If found, the clients will then parse the fields and proceed
+/// to establish the websocket connection
+///
+/// The server will already be created by this time, and so we send
+/// DeviceFound(Ipv4Addr) to the server pipe
 pub fn client_handle_event(event: &ServiceEvent) {
     match event {
         ServiceEvent::ServiceResolved(info) => {
             println!("Resolved a new service: {}", info.get_fullname());
+            let addresses = info.get_addresses();
+            addresses.iter().for_each(|addr| {
+                println!("Address Found: {}", addr);
+            });
+            info.get_properties().iter().for_each(|p| {
+                println!("{}: {}", p.key(), p.val());
+            });
         }
         other_event => {
             println!("Received other event: {:?}", &other_event);
