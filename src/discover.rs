@@ -2,17 +2,12 @@ use std::{
     io::{Write, Read},
     time::Duration,
     thread::sleep,
-    net::{TcpStream, TcpListener},
+    net::{TcpStream, TcpListener, Ipv4Addr},
     process::exit,
 };
 use mdns_sd::{ServiceEvent, ServiceInfo, ServiceDaemon, Receiver};
 
 pub const SERVICE_TYPE: &str = "_clipshare._udp.local.";
-
-pub enum DeviceMsg {
-    RegisterDevice,
-    DeviceRegistered,
-}
 
 pub struct DeviceMonitor {
     pub mdns: ServiceDaemon,
@@ -41,7 +36,7 @@ impl DeviceMonitor {
     }
 }
 
-fn handle_new_client(event: &ServiceEvent) {
+fn handle_new_client(event: &ServiceEvent) -> Option<ServiceInfo> {
     match event {
         ServiceEvent::ServiceResolved(info) => {
 
@@ -54,20 +49,14 @@ fn handle_new_client(event: &ServiceEvent) {
                 println!("{}: {}", p.key(), p.val());
             });
 
-            // Tell the device to stop sending connection messages
-            addresses.iter().for_each(|addr| {
-                //let address = format!("{}:9124", addr);
-                //let address = format!("{}:5201", addr);
-                let address = format!("{}:5201", "192.168.1.14");
-                //let mut stream = TcpStream::connect(addr.to_string())
-                let mut stream = TcpStream::connect(address)
-                    .expect("Couldn't connect to device...");
-                stream.write_all(&[1]).unwrap();
-                stream.shutdown(std::net::Shutdown::Both).unwrap();
-            });
-                    }
+            // TODO: Tell the device to stop sending connection messages
+            //addresses.iter().for_each(|addr| {
+            //});
+            Some(info.to_owned())
+        }
         other_event => {
             println!("Received other event: {:?}", &other_event);
+            None
         }
     }
 }
@@ -101,35 +90,10 @@ impl Device {
         if let Some(service) = &self.service_info {
             // TODO: Run forever for now, we'll kill this later somehow,
             // when we drop the connection.
-
-            let addresses = service.get_addresses();
-            for addr in addresses {
-                //println!("{}", addr);
-                //let address = format!("{}:5000", addr.to_string());
-                //let address = format!("{}:9124", addr);
-                //let address = format!("{}:5201", addr);
-                let address = format!("{}:5201", "192.168.1.14");
-                let listener = TcpListener::bind(address).unwrap();
-                //let mut stream = TcpStream::connect(addr.to_string())
-                        //.expect("Couldn't connect to device...");
-                loop {
-                    // Register with the daemon, which publishes the service.
-                    self.mdns.register(service.to_owned()).expect("Failed to register our service");
-                    for stream in listener.incoming() {
-                        let mut stream = stream.unwrap();
-                        let mut buf = [0; 1];
-                        let result = stream.read(&mut buf).unwrap();
-                        if result == 1 { // Shutdown signal
-                            exit(0);
-                        }
-                    }
-                    //let result = stream.read_timeout(Duration::from_secs(15));
-                    //let mut buf = [0; 1];
-                    //let result = stream.read(&mut buf).unwrap();
-                    //if result == 1 { // Shutdown signal
-                        //exit(0);
-                    //}
-                }
+            loop {
+                // Register with the daemon, which publishes the service.
+                self.mdns.register(service.to_owned()).expect("Failed to register our service");
+                sleep(Duration::from_secs(15));
             }
         }
     }
