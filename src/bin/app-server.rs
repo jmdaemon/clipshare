@@ -1,4 +1,5 @@
-use clipshare::ws::{Address, setup_server, poll_client_connections};
+use clipshare::{load_config, init_device};
+use clipshare::ws::{Address, setup_server, poll_client_connections, Dev};
 use clipshare::ws::PeerMap;
 use clipshare::discover::{Device, SERVICE_TYPE};
 
@@ -12,12 +13,13 @@ use std::{
 use local_ip_address::local_ip;
 
 // Create server
-pub async fn start_server(address: Arc<Address>) {
+//pub async fn start_server(dev: &mut Device, address: Arc<Address>) {
+pub async fn start_server(mut dev: Dev, address: Arc<Address>) {
     let addr = address.to_string();
     let server = setup_server(addr.clone());
     let state = PeerMap::new(Mutex::new(HashMap::new()));
 
-    tokio::join!(poll_client_connections(server.await, state));
+    tokio::join!(poll_client_connections(dev, server.await, state));
 }
 
 // Attempt to register device
@@ -50,6 +52,13 @@ pub async fn register_device(address: Arc<Address>) {
 
 #[tokio::main]
 pub async fn main() {
+    // Load the clipboard for the current device
+    let cfg = load_config();
+    let mut dev = init_device();
+
+    let mut device = Arc::new(Mutex::new(dev));
+
+    // Set ip address and port
     let ip = local_ip().unwrap().to_string();
     let port = 5200;
 
@@ -57,15 +66,19 @@ pub async fn main() {
     let addr = Arc::new(addr);
 
     let addr_reg_dev = Arc::clone(&addr);
+
+    // Create async threads
     let thread_register_device = tokio::spawn(async move {
         register_device(addr_reg_dev).await
     });
 
+    // In another thread, establish the server
     let addr_start_serv = Arc::clone(&addr);
     let thread_start_server = tokio::spawn(async move {
-        start_server(addr_start_serv).await
+        start_server(device, addr_start_serv).await
     });
-    // In another thread, establish the server
+
+    // Run
     tokio::join!(
         thread_register_device,
         thread_start_server,

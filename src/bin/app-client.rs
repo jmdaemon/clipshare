@@ -1,8 +1,13 @@
-use clipshare::{ws::setup_client, discover::{DeviceMonitor, handle_new_client, SERVICE_TYPE}};
-use std::net::Ipv4Addr;
+use clipshare::{ws::setup_client, discover::{DeviceMonitor, handle_new_client, SERVICE_TYPE}, load_config, init_device};
+use std::{net::Ipv4Addr, sync::{Arc, Mutex}};
 
 #[tokio::main]
 async fn main() {
+    // Load the clipboard for the current device
+    let cfg = load_config();
+    let mut dev = init_device();
+    let mut device = Arc::new(Mutex::new(dev));
+
     let mut addr = Ipv4Addr::LOCALHOST;
     let port = 5200;
 
@@ -23,6 +28,7 @@ async fn main() {
 
     // Create client to the connected device
     let url = format!("ws://{}:{}", addr, port);
-    let client = setup_client(url);
+    //let client = setup_client(url);
+    let client = setup_client(device, url);
     tokio::join!(client);
 }

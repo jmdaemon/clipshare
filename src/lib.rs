@@ -17,7 +17,6 @@ use serde::{Serialize, Deserialize};
 
 #[macro_use] extern crate log;
 
-
 const QUALIFIER: &str = "com";
 const ORGANIZATION: &str = "jmdaemon";
 const APPLICATION: &str = "clipshare";

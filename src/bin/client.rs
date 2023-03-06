@@ -1,3 +1,4 @@
+/*
 use clipshare::ws::setup_client;
 use std::env;
 
@@ -8,3 +9,4 @@ async fn main() {
     let client = setup_client(url);
     tokio::join!(client);
 }
+*/

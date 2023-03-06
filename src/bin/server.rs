@@ -1,3 +1,4 @@
+/*
 use clipshare::ws::{setup_server, poll_client_connections};
 use clipshare::ws::PeerMap;
 
@@ -15,3 +16,5 @@ async fn main() {
 
     tokio::join!(poll_client_connections(server.await, state));
 }
+
+*/
