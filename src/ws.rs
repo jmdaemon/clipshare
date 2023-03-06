@@ -23,6 +23,8 @@ use tokio::{
 use tokio_tungstenite::{connect_async, tungstenite::protocol::Message};
 use local_ip_address::local_ip;
 
+use crate::Device;
+
 /*
  * 1. Initialize event bus
  * 2. Create async task: notify_changed() -> { Send ClipboardEvent::LastCopiedChanged() }
@@ -47,6 +49,7 @@ pub struct Server {
 // Types
 pub type Tx = UnboundedSender<Message>;
 pub type PeerMap = Arc<Mutex<HashMap<SocketAddr, Tx>>>;
+pub type Dev = Arc<Mutex<Device>>;
 
 #[derive(Debug, Clone)]
 pub enum ClipboardEvent {
@@ -113,21 +116,22 @@ impl ClipboardChannel {
     }
 }
 
-/// Callback to notify listeners for a clipboard update
-pub fn cb_send_update(r: Sender<ClipboardEvent>, last_copied: &str) -> Result<usize, SendError<ClipboardEvent>> {
-    let event = ClipboardEvent::ReceiveCopied(String::from(last_copied));
-    r.send(event)
-}
-
-/// Callback to parse notification from senders for a clipboard update
-pub async fn cb_receive_update(r: &mut Receiver<ClipboardEvent>) {
-    let res = r.recv().await.unwrap();
-    match res {
-        ClipboardEvent::ReceiveCopied(last_copied) => {
-            println!("Received {}", last_copied);
-        }
-    }
-}
+///// Callback to notify listeners for a clipboard update
+//pub fn cb_send_update(r: Sender<ClipboardEvent>, last_copied: &str) -> Result<usize, SendError<ClipboardEvent>> {
+//    let event = ClipboardEvent::ReceiveCopied(String::from(last_copied));
+//    r.send(event)
+//}
+//
+///// Callback to parse notification from senders for a clipboard update
+//pub async fn cb_receive_update(r: &mut Receiver<ClipboardEvent>) {
+//    let res = r.recv().await.unwrap();
+//    match res {
+//        ClipboardEvent::ReceiveCopied(last_copied) => {
+//            print!("Received {}", last_copied);
+//            dev.set_clipboard_conts(last_copied);
+//        }
+//    }
+//}
 
 /// Listen for client connections
 pub async fn setup_server(addr: String) -> TcpListener {
@@ -138,9 +142,14 @@ pub async fn setup_server(addr: String) -> TcpListener {
 }
 
 /// Establish connection to client, and register our event listener callback function
-fn cb_server_message_received(msg: Message, peer_map: &PeerMap, addr: SocketAddr) -> future::Ready<Result<(), tungstenite::Error>> {
-    println!("Received a message from {}: {}", addr, msg.to_text().unwrap());
+//fn cb_server_message_received(msg: Message, peer_map: &PeerMap, addr: SocketAddr) -> future::Ready<Result<(), tungstenite::Error>> {
+fn cb_server_message_received(dev: &mut Dev, msg: Message, peer_map: &PeerMap, addr: SocketAddr) -> future::Ready<Result<(), tungstenite::Error>> {
+    print!("Received a message from {}: {}", addr, msg.to_text().unwrap());
     let peers = peer_map.lock().unwrap();
+    println!("Copying to clipboard");
+    //dev.lock().unwrap().set_clipboard_conts(msg.to_string());
+    let conts = msg.to_string().trim().to_string();
+    dev.lock().unwrap().set_clipboard_conts(conts);
 
     // We want to broadcast the message to everyone except ourselves.
     let broadcast_recipients =
@@ -153,7 +162,7 @@ fn cb_server_message_received(msg: Message, peer_map: &PeerMap, addr: SocketAddr
     future::ok(())
 }
 
-pub async fn handle_connection(peer_map: PeerMap, raw_stream: TcpStream, addr: SocketAddr) {
+pub async fn handle_connection(mut dev: Dev, peer_map: PeerMap, raw_stream: TcpStream, addr: SocketAddr) {
     println!("Incoming TCP connection from: {}", addr);
 
     // Accept and create the websocket stream
@@ -170,7 +179,8 @@ pub async fn handle_connection(peer_map: PeerMap, raw_stream: TcpStream, addr: S
 
     //incoming.try_for_each()
     let broadcast_incoming = incoming.try_for_each(|msg| {
-        cb_server_message_received(msg, &peer_map, addr)
+        //cb_server_message_received(msg, &peer_map, addr)
+        cb_server_message_received(&mut dev, msg, &peer_map, addr)
     });
 
     let receive_from_others = receiver.map(Ok).forward(outgoing);
@@ -184,13 +194,13 @@ pub async fn handle_connection(peer_map: PeerMap, raw_stream: TcpStream, addr: S
 
 
 // Accepts new client connections
-pub async fn poll_client_connections(srv: TcpListener, state: PeerMap) {
+pub async fn poll_client_connections(dev: Dev, srv: TcpListener, state: PeerMap) {
     while let Ok((stream, addr)) = srv.accept().await {
-        tokio::spawn(handle_connection(state.clone(), stream, addr));
+        tokio::spawn(handle_connection(dev.clone(), state.clone(), stream, addr));
     }
 }
 
-pub async fn setup_client(connect_addr: String) {
+pub async fn setup_client(mut dev: Dev, connect_addr: String) {
     let url = url::Url::parse(&connect_addr).unwrap();
 
     let (stdin_tx, stdin_rx) = channel::mpsc::unbounded();
@@ -200,14 +210,28 @@ pub async fn setup_client(connect_addr: String) {
     println!("WebSocket handshake has been successfully completed");
 
     let (write, read) = ws_stream.split();
+    
+    //let data = dev.get_clipboard_conts();
+    //let data = dev.lock().unwrap().get_clipboard_conts();
+    //tokio::io::stdout().write_all(&data.as_bytes()).await.unwrap();
 
     let stdin_to_ws = stdin_rx.map(Ok).forward(write);
     let ws_to_stdout = {
         read.for_each(|message| async {
-            let data = message.unwrap().into_data();
-            tokio::io::stdout().write_all(&data).await.unwrap();
+            //let data = message.unwrap().into_data();
+            //tokio::io::stdout().write_all(&data).await.unwrap();
+            let data = dev.lock().unwrap().get_clipboard_conts();
+            tokio::io::stdout().write_all(&data.as_bytes()).await.unwrap();
         })
     };
+
+    //let stdin_to_ws = stdin_rx.map(Ok).forward(write);
+    //let ws_to_stdout = {
+        //read.for_each(|message| async {
+            ////let data = message.unwrap().into_data();
+            //tokio::io::stdout().write_all(&data).await.unwrap();
+        //})
+    //};
 
     pin_mut!(stdin_to_ws, ws_to_stdout);
     future::select(stdin_to_ws, ws_to_stdout).await;
