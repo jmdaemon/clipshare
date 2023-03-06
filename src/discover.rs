@@ -11,7 +11,7 @@ pub const SERVICE_TYPE: &str = "_clipshare._udp.local.";
 
 pub struct DeviceMonitor {
     pub mdns: ServiceDaemon,
-    receiver: Receiver<ServiceEvent>,
+    pub receiver: Receiver<ServiceEvent>,
 }
 
 pub struct Device {
@@ -36,7 +36,7 @@ impl DeviceMonitor {
     }
 }
 
-fn handle_new_client(event: &ServiceEvent) -> Option<ServiceInfo> {
+pub fn handle_new_client(event: &ServiceEvent) -> Option<ServiceInfo> {
     match event {
         ServiceEvent::ServiceResolved(info) => {
 
@@ -46,7 +46,7 @@ fn handle_new_client(event: &ServiceEvent) -> Option<ServiceInfo> {
                 println!("Address Found: {}", addr);
             });
             info.get_properties().iter().for_each(|p| {
-                println!("{}: {}", p.key(), p.val());
+                println!("Property Name {}: Property Value {}", p.key(), p.val());
             });
 
             // TODO: Tell the device to stop sending connection messages
