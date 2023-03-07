@@ -54,6 +54,17 @@ impl Device {
     pub fn set_clipboard_conts(&mut self, conts: String) {
         set_clipboard_conts(&mut self.clipboard, conts)
     }
+
+    //pub async fn watch_clipboard(&mut self) {
+        //let mut conts = self.get_clipboard_conts();
+        //let outer = loop {
+            //let now = self.get_clipboard_conts();
+            //if conts != now {
+                //conts = now;
+                //break conts;
+            //}
+        //};
+    //}
 }
 
 #[derive(Serialize, Deserialize, Debug)]
