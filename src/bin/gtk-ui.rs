@@ -1,5 +1,5 @@
 use clipshare::{
-    widgets::app::{App, AppInit},
+    gtk::widgets::app::{App, AppInit},
     consts::APP_ID
 };
 use relm4::RelmApp;
