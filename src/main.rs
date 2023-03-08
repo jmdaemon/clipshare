@@ -14,7 +14,7 @@ fn main() {
     pretty_env_logger::init();
     info!("Copying to clipboard");
 
-    let cfg = load_config();
+    let _cfg = load_config();
     let mut dev = init_device();
     test_clipboard(&mut dev);
 }
