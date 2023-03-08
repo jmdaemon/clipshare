@@ -1,24 +1,19 @@
 use std::{
     fmt,
     collections::HashMap,
-    env,
     net::SocketAddr,
-    sync::{Arc, Mutex, MutexGuard},
-    thread, vec,
+    sync::{Arc, Mutex},
 };
 
 use futures::{
     channel, future, pin_mut, StreamExt,
     channel::mpsc::{unbounded, UnboundedSender},
-    stream::{TryStreamExt}, TryFutureExt,
-    future::join_all, join,
+    stream::{TryStreamExt}, join,
 };
 use tokio::{
     net::{TcpListener, TcpStream},
-    io::{AsyncReadExt, AsyncWriteExt},
     sync::broadcast,
-    sync::broadcast::{Sender, Receiver, error::{SendError, RecvError}},
-    time::Duration,
+    sync::broadcast::{Sender, Receiver},
 };
 use tokio_tungstenite::{connect_async, tungstenite::protocol::Message};
 use local_ip_address::local_ip;
@@ -202,7 +197,7 @@ pub async fn send_on_clipboard_change(tx: channel::mpsc::UnboundedSender<Message
     };
 }
 
-pub async fn setup_client(mut dev: Dev, connect_addr: String) {
+pub async fn setup_client(dev: Dev, connect_addr: String) {
     let url = url::Url::parse(&connect_addr).unwrap();
 
     let (stdin_tx, stdin_rx) = channel::mpsc::unbounded();
@@ -211,7 +206,7 @@ pub async fn setup_client(mut dev: Dev, connect_addr: String) {
     let (ws_stream, _) = connect_async(url).await.expect("Failed to connect");
     println!("WebSocket handshake has been successfully completed");
 
-    let (write, read) = ws_stream.split();
+    let (write, _read) = ws_stream.split();
     let clipboard_to_ws = stdin_rx.map(Ok).forward(write);
     join!(clipboard_to_ws);
 }
