@@ -3,7 +3,7 @@ use std::{
     collections::HashMap,
     env,
     net::SocketAddr,
-    sync::{Arc, Mutex},
+    sync::{Arc, Mutex, MutexGuard},
     thread, vec,
 };
 
@@ -201,22 +201,58 @@ pub async fn poll_client_connections(dev: Dev, srv: TcpListener, state: PeerMap)
     }
 }
 
-pub async fn clipboard_changed(dev: Dev) -> String {
-    let changed = loop {
-        let mut conts = dev.lock().unwrap().get_clipboard_conts();
-        let now = dev.lock().unwrap().get_clipboard_conts();
+pub async fn clipboard_changed(dev: &Dev) -> String {
+//pub async fn clipboard_changed(dev: &'a MutexGuard<Device>) -> String {
+//pub async fn clipboard_changed(dev: &mut Device) -> String {
+//pub fn clipboard_changed(dev: Dev) -> String {
+//pub async fn clipboard_changed(mut dev: MutexGuard<Device>) -> String {
+    //let changed = loop {
+    let mut lock_dev = dev.lock().unwrap();
+    //let conts = dev.lock().unwrap().get_clipboard_conts();
+    let conts = lock_dev.get_clipboard_conts();
+    loop {
+        //let mut conts = dev.lock().unwrap().get_clipboard_conts();
+        //let now = dev.lock().unwrap().get_clipboard_conts();
+        //let mut conts = dev.get_clipboard_conts();
+        //let now = dev.get_clipboard_conts();
+        let now = lock_dev.get_clipboard_conts();
         //if conts != now && !now.is_empty() {
         if conts != now {
-            conts = now;
-            break conts;
+            //conts = now;
+            //break conts;
+            break now;
         }
-    };
-    changed
+    }
+    //changed
 }
 
+//pub async fn send_on_clipboard_change(tx: channel::mpsc::UnboundedSender<Message>, dev: Dev) {
 pub async fn send_on_clipboard_change(tx: channel::mpsc::UnboundedSender<Message>, dev: Dev) {
+//pub fn send_on_clipboard_change(tx: channel::mpsc::UnboundedSender<Message>, dev: Dev) {
+    //let copy = dev.clone();
+    //let copy = dev.clone();
     loop {
-        let conts = clipboard_changed(dev.clone()).await;
+        //let a = dev.lock().unwrap();
+        //let mutex = dev.lock().unwrap();
+        //let conts = clipboard_changed(dev.clone()).await;
+        //let conts = clipboard_changed(dev.clone());
+        //let conts = tokio::task::spawn_blocking(clipboard_changed(dev.clone()));
+        //let cdev = dev.clone();
+        //let closure = move || {
+            //clipboard_changed(cdev)
+        //};
+        //let task = tokio::task::spawn_blocking(closure);
+        //let conts = task.await.unwrap();
+
+        //let conts = tokio::spawn(clipboard_changed();
+        //join!(conts);
+        //let conts = tokio::task::spawn_blocking(clipboard_changed(copy));
+        //let conts = tokio::spawn(clipboard_changed(&copy)).await.unwrap();
+        //let conts = tokio::spawn(clipboard_changed(mutex)).await.unwrap();
+        //let conts = tokio::spawn(clipboard_changed(mutex.into())).await.unwrap();
+        //let conts = clipboard_changed(dev.clone()).await;
+        //let conts = clipboard_changed(&copy).await;
+        let conts = clipboard_changed(&dev.clone()).await;
         println!("Clipboard Contents: {}", &conts);
 
         // Send contents to connected device
@@ -232,7 +268,14 @@ pub async fn setup_client(mut dev: Dev, connect_addr: String) {
     let url = url::Url::parse(&connect_addr).unwrap();
 
     let (stdin_tx, stdin_rx) = channel::mpsc::unbounded();
+    //let closure = || {
+        //send_on_clipboard_change(stdin_tx, dev);
+    //};
     tokio::spawn(send_on_clipboard_change(stdin_tx, dev));
+    //tokio::task::spawn_blocking(closure);
+    //let a = tokio::task::spawn_blocking(send_on_clipboard_change(stdin_tx, dev)).await;
+    //tokio::task::spawn(send_on_clipboard_change(stdin_tx, dev));
+    //tokio::task::spawn(send_on_clipboard_change(stdin_tx, dev));
     //tokio::spawn(read_stdin(stdin_tx));
 
     let (ws_stream, _) = connect_async(url).await.expect("Failed to connect");
