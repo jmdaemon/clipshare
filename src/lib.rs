@@ -2,6 +2,8 @@ pub mod app;
 pub mod ws;
 #[cfg(target_os = "linux")]
 pub mod gtk;
+#[cfg(target_os = "windows")]
+pub mod winui;
 pub mod consts;
 pub mod discover;
 
