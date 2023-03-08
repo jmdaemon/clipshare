@@ -4,9 +4,9 @@ use std::{net::Ipv4Addr, sync::{Arc, Mutex}};
 #[tokio::main]
 async fn main() {
     // Load the clipboard for the current device
-    let cfg = load_config();
-    let mut dev = init_device();
-    let mut device = Arc::new(Mutex::new(dev));
+    let _cfg = load_config();
+    let dev = init_device();
+    let device = Arc::new(Mutex::new(dev));
 
     let mut addr = Ipv4Addr::LOCALHOST;
     let port = 5200;
