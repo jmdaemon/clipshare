@@ -98,9 +98,9 @@ impl SimpleComponent for App {
     }
 
     fn init(
-        init: Self::Init,
+        _init: Self::Init,
         root: &Self::Root,
-        sender: ComponentSender<Self>,
+        _sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
 
         let model = App {};
@@ -108,7 +108,7 @@ impl SimpleComponent for App {
         ComponentParts { model, widgets }
     }
 
-    fn update(&mut self, message: Self::Input, sender: ComponentSender<Self>) {
+    fn update(&mut self, _message: Self::Input, _sender: ComponentSender<Self>) {
         //match message {
             //_ => todo!()
         //}

@@ -14,7 +14,7 @@ use local_ip_address::local_ip;
 
 // Create server
 //pub async fn start_server(dev: &mut Device, address: Arc<Address>) {
-pub async fn start_server(mut dev: Dev, address: Arc<Address>) {
+pub async fn start_server(dev: Dev, address: Arc<Address>) {
     let addr = address.to_string();
     let server = setup_server(addr.clone());
     let state = PeerMap::new(Mutex::new(HashMap::new()));
@@ -53,10 +53,10 @@ pub async fn register_device(address: Arc<Address>) {
 #[tokio::main]
 pub async fn main() {
     // Load the clipboard for the current device
-    let cfg = load_config();
-    let mut dev = init_device();
+    let _cfg = load_config();
+    let dev = init_device();
 
-    let mut device = Arc::new(Mutex::new(dev));
+    let device = Arc::new(Mutex::new(dev));
 
     // Set ip address and port
     let ip = local_ip().unwrap().to_string();

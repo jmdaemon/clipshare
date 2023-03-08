@@ -1,9 +1,6 @@
 use std::{
-    io::{Write, Read},
     time::Duration,
     thread::sleep,
-    net::{TcpStream, TcpListener, Ipv4Addr},
-    process::exit,
 };
 use mdns_sd::{ServiceEvent, ServiceInfo, ServiceDaemon, Receiver};
 
