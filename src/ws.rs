@@ -116,23 +116,6 @@ impl ClipboardChannel {
     }
 }
 
-///// Callback to notify listeners for a clipboard update
-//pub fn cb_send_update(r: Sender<ClipboardEvent>, last_copied: &str) -> Result<usize, SendError<ClipboardEvent>> {
-//    let event = ClipboardEvent::ReceiveCopied(String::from(last_copied));
-//    r.send(event)
-//}
-//
-///// Callback to parse notification from senders for a clipboard update
-//pub async fn cb_receive_update(r: &mut Receiver<ClipboardEvent>) {
-//    let res = r.recv().await.unwrap();
-//    match res {
-//        ClipboardEvent::ReceiveCopied(last_copied) => {
-//            print!("Received {}", last_copied);
-//            dev.set_clipboard_conts(last_copied);
-//        }
-//    }
-//}
-
 /// Listen for client connections
 pub async fn setup_server(addr: String) -> TcpListener {
     let try_socket = TcpListener::bind(addr.clone()).await;
@@ -142,13 +125,11 @@ pub async fn setup_server(addr: String) -> TcpListener {
 }
 
 /// Establish connection to client, and register our event listener callback function
-//fn cb_server_message_received(msg: Message, peer_map: &PeerMap, addr: SocketAddr) -> future::Ready<Result<(), tungstenite::Error>> {
 fn cb_server_message_received(dev: &mut Dev, msg: Message, peer_map: &PeerMap, addr: SocketAddr) -> future::Ready<Result<(), tungstenite::Error>> {
-    //print!("Received a message from {}: {}", addr, msg.to_text().unwrap());
     println!("Received a message from {}: {}", addr, msg.to_text().unwrap());
     let peers = peer_map.lock().unwrap();
+
     println!("Copying to clipboard");
-    //dev.lock().unwrap().set_clipboard_conts(msg.to_string());
     let conts = msg.to_string().trim().to_string();
     dev.lock().unwrap().set_clipboard_conts(conts);
 
@@ -178,9 +159,7 @@ pub async fn handle_connection(mut dev: Dev, peer_map: PeerMap, raw_stream: TcpS
 
     let (outgoing, incoming) = ws_stream.split();
 
-    //incoming.try_for_each()
     let broadcast_incoming = incoming.try_for_each(|msg| {
-        //cb_server_message_received(msg, &peer_map, addr)
         cb_server_message_received(&mut dev, msg, &peer_map, addr)
     });
 
@@ -202,64 +181,23 @@ pub async fn poll_client_connections(dev: Dev, srv: TcpListener, state: PeerMap)
 }
 
 pub async fn clipboard_changed(dev: &Dev) -> String {
-//pub async fn clipboard_changed(dev: &'a MutexGuard<Device>) -> String {
-//pub async fn clipboard_changed(dev: &mut Device) -> String {
-//pub fn clipboard_changed(dev: Dev) -> String {
-//pub async fn clipboard_changed(mut dev: MutexGuard<Device>) -> String {
-    //let changed = loop {
     let mut lock_dev = dev.lock().unwrap();
-    //let conts = dev.lock().unwrap().get_clipboard_conts();
     let conts = lock_dev.get_clipboard_conts();
     loop {
-        //let mut conts = dev.lock().unwrap().get_clipboard_conts();
-        //let now = dev.lock().unwrap().get_clipboard_conts();
-        //let mut conts = dev.get_clipboard_conts();
-        //let now = dev.get_clipboard_conts();
         let now = lock_dev.get_clipboard_conts();
-        //if conts != now && !now.is_empty() {
         if conts != now {
-            //conts = now;
-            //break conts;
             break now;
         }
     }
-    //changed
 }
 
-//pub async fn send_on_clipboard_change(tx: channel::mpsc::UnboundedSender<Message>, dev: Dev) {
 pub async fn send_on_clipboard_change(tx: channel::mpsc::UnboundedSender<Message>, dev: Dev) {
-//pub fn send_on_clipboard_change(tx: channel::mpsc::UnboundedSender<Message>, dev: Dev) {
-    //let copy = dev.clone();
-    //let copy = dev.clone();
+    let clone_dev = dev.clone();
     loop {
-        //let a = dev.lock().unwrap();
-        //let mutex = dev.lock().unwrap();
-        //let conts = clipboard_changed(dev.clone()).await;
-        //let conts = clipboard_changed(dev.clone());
-        //let conts = tokio::task::spawn_blocking(clipboard_changed(dev.clone()));
-        //let cdev = dev.clone();
-        //let closure = move || {
-            //clipboard_changed(cdev)
-        //};
-        //let task = tokio::task::spawn_blocking(closure);
-        //let conts = task.await.unwrap();
-
-        //let conts = tokio::spawn(clipboard_changed();
-        //join!(conts);
-        //let conts = tokio::task::spawn_blocking(clipboard_changed(copy));
-        //let conts = tokio::spawn(clipboard_changed(&copy)).await.unwrap();
-        //let conts = tokio::spawn(clipboard_changed(mutex)).await.unwrap();
-        //let conts = tokio::spawn(clipboard_changed(mutex.into())).await.unwrap();
-        //let conts = clipboard_changed(dev.clone()).await;
-        //let conts = clipboard_changed(&copy).await;
-        let conts = clipboard_changed(&dev.clone()).await;
+        let conts = clipboard_changed(&clone_dev).await;
         println!("Clipboard Contents: {}", &conts);
 
         // Send contents to connected device
-        //let mut buf = vec![0; 1024];
-        //buf.write(conts.as_bytes());
-        //buf.truncate(conts.len());
-        //tx.unbounded_send(Message::binary(buf));
         tx.unbounded_send(Message::text(conts));
     };
 }
@@ -268,120 +206,12 @@ pub async fn setup_client(mut dev: Dev, connect_addr: String) {
     let url = url::Url::parse(&connect_addr).unwrap();
 
     let (stdin_tx, stdin_rx) = channel::mpsc::unbounded();
-    //let closure = || {
-        //send_on_clipboard_change(stdin_tx, dev);
-    //};
     tokio::spawn(send_on_clipboard_change(stdin_tx, dev));
-    //tokio::task::spawn_blocking(closure);
-    //let a = tokio::task::spawn_blocking(send_on_clipboard_change(stdin_tx, dev)).await;
-    //tokio::task::spawn(send_on_clipboard_change(stdin_tx, dev));
-    //tokio::task::spawn(send_on_clipboard_change(stdin_tx, dev));
-    //tokio::spawn(read_stdin(stdin_tx));
 
     let (ws_stream, _) = connect_async(url).await.expect("Failed to connect");
     println!("WebSocket handshake has been successfully completed");
 
     let (write, read) = ws_stream.split();
-    
-    //let data = dev.get_clipboard_conts();
-    //let data = dev.lock().unwrap().get_clipboard_conts();
-    //tokio::io::stdout().write_all(&data.as_bytes()).await.unwrap();
-    
-
-    // Watch clipboard for changes
-    // Write clipboard changes on 
-
     let clipboard_to_ws = stdin_rx.map(Ok).forward(write);
     join!(clipboard_to_ws);
-    //let stdin_to_ws = stdin_rx.map(Ok).forward(write);
-    //let ws_to_stdout = {
-        //read.for_each(|message| async {
-            ////let data = message.unwrap().into_data();
-            ////tokio::io::stdout().write_all(&data).await.unwrap();
-            ////let data = dev.lock().unwrap().get_clipboard_conts();
-            ////tokio::io::stdout().write_all(&data.as_bytes()).await.unwrap();
-        //})
-    //};
-
-    //let ws_to_stdout = {
-        //read.for_each(|message| async {
-            ////let data = message.unwrap().into_data();
-            ////tokio::io::stdout().write_all(&data).await.unwrap();
-            //let data = dev.lock().unwrap().get_clipboard_conts();
-            //tokio::io::stdout().write_all(&data.as_bytes()).await.unwrap();
-        //})
-    //};
-    //let ws_to_stdout = {
-    //let ws_to_stdout =
-        //async move {
-        /*
-        tokio::spawn(async move {
-            //let outer = loop {
-            loop {
-                let conts = clipboard_changed(dev.clone()).await;
-                println!("Conts: {}", &conts);
-
-                // Send contents to connected device
-                let mut buf = vec![0; 1024];
-                buf.write(conts.as_bytes());
-                buf.truncate(conts.len());
-                stdin_tx.unbounded_send(Message::binary(buf));
-
-                /*
-                let mut conts = dev.lock().unwrap().get_clipboard_conts();
-                let now = dev.lock().unwrap().get_clipboard_conts();
-                if conts != now {
-                    conts = now;
-
-                    //let data = dev.lock().unwrap().get_clipboard_conts();
-                    let data = conts;
-                    let mut buf = vec![0; 1024];
-                    //buf = data.as_bytes();
-                    buf.write(data.as_bytes());
-                    buf.truncate(data.len());
-                    stdin_tx.unbounded_send(Message::binary(buf));
-                    //Message::binary(buf)
-                    //stdin_tx.unbounded_send(&buf);
-                    //stdin_tx.unbounded_send(&data.as_bytes());
-                    //stdin_tx.unbounded_send(&data.as_bytes()).await.unwrap();
-                    //write(&data.as_bytes());
-                    //write.reunite(read)
-                    //tokio::io::stdout().write_all(&data.as_bytes()).await.unwrap();
-                    //break conts;
-                }
-                */
-            };
-*/
-        //})
-        //;
-    //};
-    //join!(ws_to_stdout);
-    
-
-    //let stdin_to_ws = stdin_rx.map(Ok).forward(write);
-    //let ws_to_stdout = {
-        //read.for_each(|message| async {
-            ////let data = message.unwrap().into_data();
-            //tokio::io::stdout().write_all(&data).await.unwrap();
-        //})
-    //};
-    //join!(stdin_to_ws);
-
-    //pin_mut!(stdin_to_ws, ws_to_stdout);
-    //future::select(stdin_to_ws, ws_to_stdout).await;
-}
-
-// Our helper method which will read data from stdin and send it along the
-// sender provided.
-async fn read_stdin(tx: channel::mpsc::UnboundedSender<Message>) {
-    let mut stdin = tokio::io::stdin();
-    loop {
-        let mut buf = vec![0; 1024];
-        let n = match stdin.read(&mut buf).await {
-            Err(_) | Ok(0) => break,
-            Ok(n) => n,
-        };
-        buf.truncate(n);
-        tx.unbounded_send(Message::binary(buf)).unwrap();
-    }
 }
