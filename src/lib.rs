@@ -1,6 +1,7 @@
 pub mod app;
 pub mod ws;
-pub mod widgets;
+#[cfg(target_os = "linux")]
+pub mod gtk;
 pub mod consts;
 pub mod discover;
 
