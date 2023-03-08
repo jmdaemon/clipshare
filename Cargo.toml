@@ -22,7 +22,7 @@ tungstenite = { version = "0.18.0", features = ["rustls"] }
 futures = "0.3"
 url = "2.3.1"
 directories = "4.0"
-relm4 = "0.5.0"
+relm4 = { version = "0.5.0", optional=true}
 const_format = "0.2.30"
 local-ip-address = "0.5.1"
 mdns = "3.0.0"
