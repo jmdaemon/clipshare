@@ -54,6 +54,9 @@ impl FactoryComponent for HistoryEntry {
                 set_orientation: gtk::Orientation::Horizontal,
                 set_spacing: 12,
                 set_hexpand: true,
+                //set_css_classes: &["history-entry"],
+                add_css_class: "history-entry",
+                //set_border_width: "6px",
                 //set_halign: gtk::Align::Start,
 
                 //gtk::Box {
@@ -220,6 +223,7 @@ impl SimpleComponent for HistoryModel {
             history.guard().push_front(entry);
             index += 1;
         });
+        relm4::set_global_css_from_file("src/gtk/widgets/history_entry.css");
 
         let model = HistoryModel { history };
         let history_box = model.history.widget();
