@@ -1,0 +1,30 @@
+/*.history-entry {*/
+    /*border-width: 4px;*/
+    /*border-style: solid;*/
+/*}*/
+
+/*
+You can type here any CSS rule recognized by GTK.
+You can temporarily disable this custom CSS by clicking on the “Pause” button above.
+
+Changes are applied instantly and globally, for the whole application.
+*/
+
+.history-entry:hover {
+	border-style: solid;
+	border-opacity: 0.70;
+	/* border-style: dotted dashed solid double; */
+	/* border-width: 2px; */
+	border-width: 3px;
+	/* border-color: rgba(22, 22, 22, 0.5); */
+	/* border-color: #007BFF; */
+	border-color: rgba(0, 123, 255, 0.5);
+	padding-top: 6px;
+	padding-bottom: 6px;
+/*
+	
+	padding-top: 6px;
+	padding-bottom: 6px;
+*/
+	/* border-color: 222222; */
+}
