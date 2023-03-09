@@ -18,6 +18,7 @@ use relm4::{
 
 #[derive(Debug)]
 pub struct HistoryEntry {
+    pub index: usize,
     pub last_copied: String,
 }
 
@@ -48,6 +49,7 @@ impl FactoryComponent for HistoryEntry {
             //set_selection_mode: gtk::SelectionMode::None,
             //set_selection_mode: gtk::SelectionMode::None,
             //set_hexpand: true,
+        //#[root]
             gtk::Box {
                 set_orientation: gtk::Orientation::Horizontal,
                 set_spacing: 12,
@@ -64,6 +66,13 @@ impl FactoryComponent for HistoryEntry {
                         ////set_xalign: -12.0,
                     //},
                 //},
+                gtk::Label {
+                    #[watch]
+                    set_label: &self.index.to_string(),
+                    //set_width_chars: 12,
+                    set_width_chars: 8,
+                    set_xalign: 0.6,
+                },
                 gtk::Label {
                     #[watch]
                     set_label: &self.last_copied,
@@ -92,6 +101,7 @@ impl FactoryComponent for HistoryEntry {
         index: &DynamicIndex,
         sender: FactorySender<Self>,
     ) -> Self {
+        //Self { index: index.to_owned(), last_copied: init }
         init
         //Self {
             //last_copied: init
@@ -145,11 +155,21 @@ impl SimpleComponent for HistoryModel {
     view! {
         #[root]
         gtk::ScrolledWindow {
+            #[local_ref]
+            history_box -> gtk::ListBox,
             //gtk::Box {
                 //set_orientation: gtk::Orientation::Vertical,
             //gtk::ListBox {
-            #[local_ref]
-            history_box -> gtk::ListBox,
+            //gtk::ListBox {
+                //set_selection_mode: gtk::SelectionMode::Single,
+
+                //#[local_ref]
+                //history_box -> gtk::Box {
+                    //set_orientation: gtk::Orientation::Horizontal,
+                //}
+                ////history_box -> gtk::Box,
+                ////history_box -> gtk::ListBox,
+            //},
                 //{
                 //history_box -> gtk::ListBox {
                     //set_orientation: gtk::Orientation::Horizontal,
@@ -174,12 +194,12 @@ impl SimpleComponent for HistoryModel {
         sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
 
-        //let mut history = FactoryVecDeque::new(gtk::Box::default(), sender.input_sender());
         //let selection_model = gtk::SelectionMode::Single;
         //let lb = gtk::ListBox::default();
         //lb.set_selection_mode(selection_model);
         //let mut history = FactoryVecDeque::new(lb, sender.input_sender());
 
+        //let mut history = FactoryVecDeque::new(gtk::Box::default(), sender.input_sender());
         let mut history = FactoryVecDeque::new(gtk::ListBox::default(), sender.input_sender());
 
         // Test out adding a few entries
@@ -190,9 +210,15 @@ impl SimpleComponent for HistoryModel {
             "Copied".to_owned(),
         ];
 
+        let mut index: usize = 1;
         clipboard.into_iter().for_each(|line| {
-            let entry = HistoryEntry { last_copied: line };
+            //let a = DynamicIndex::from(index);
+            //let index: Rc<DynamicIndex> = index.clone();
+            //let entry = HistoryEntry { last_copied: line, index };
+            //let entry = HistoryEntry { last_copied: line };
+            let entry = HistoryEntry { index, last_copied: line };
             history.guard().push_back(entry);
+            index += 1;
         });
 
         let model = HistoryModel { history };
