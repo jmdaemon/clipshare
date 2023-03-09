@@ -44,14 +44,36 @@ impl FactoryComponent for HistoryEntry {
     view! {
         #[root]
         gtk::ListBox {
+            set_selection_mode: gtk::SelectionMode::Single,
+            //set_selection_mode: gtk::SelectionMode::None,
+            //set_selection_mode: gtk::SelectionMode::None,
+            //set_hexpand: true,
             gtk::Box {
                 set_orientation: gtk::Orientation::Horizontal,
                 set_spacing: 12,
+                set_hexpand: true,
+                //set_halign: gtk::Align::Start,
 
+                //gtk::Box {
+                    //set_halign: gtk::Align::Start,
+                    //gtk::Label {
+                        //#[watch]
+                        //set_label: &self.last_copied,
+                        //set_width_chars: 128,
+                        ////set_justify: gtk::Justification::Left,
+                        ////set_xalign: -12.0,
+                    //},
+                //},
                 gtk::Label {
                     #[watch]
                     set_label: &self.last_copied,
-                    set_width_chars: 64,
+                    set_width_chars: 128,
+                    set_xalign: 0.0,
+                    //set_xalign: 0.03,
+                    //set_xalign: 0.06,
+                    //set_halign: gtk::Align::Start,
+                    //set_justify: gtk::Justification::Left,
+                    //set_xalign: -12.0,
                 },
                 gtk::Button {
                     set_height_request: 24,
@@ -125,20 +147,24 @@ impl SimpleComponent for HistoryModel {
         gtk::ScrolledWindow {
             //gtk::Box {
                 //set_orientation: gtk::Orientation::Vertical,
-            gtk::ListBox {
-                #[local_ref]
-                history_box -> gtk::ListBox {
+            //gtk::ListBox {
+            #[local_ref]
+            history_box -> gtk::ListBox,
+                //{
+                //history_box -> gtk::ListBox {
                     //set_orientation: gtk::Orientation::Horizontal,
                     //set_vexpand: true,
-                    set_hexpand: true,
-                }
+                    // This doesn't seem to do anything
+                    //set_selection_mode: gtk::SelectionMode::None,
+                    //set_hexpand: true,
+                //}
                 //#[local_ref]
                 //history_box -> gtk::Box {
                     ////set_orientation: gtk::Orientation::Horizontal,
                     ////set_vexpand: true,
                     //set_hexpand: true,
                 //}
-            }
+            //}
         }
     }
 
@@ -149,6 +175,11 @@ impl SimpleComponent for HistoryModel {
     ) -> ComponentParts<Self> {
 
         //let mut history = FactoryVecDeque::new(gtk::Box::default(), sender.input_sender());
+        //let selection_model = gtk::SelectionMode::Single;
+        //let lb = gtk::ListBox::default();
+        //lb.set_selection_mode(selection_model);
+        //let mut history = FactoryVecDeque::new(lb, sender.input_sender());
+
         let mut history = FactoryVecDeque::new(gtk::ListBox::default(), sender.input_sender());
 
         // Test out adding a few entries
