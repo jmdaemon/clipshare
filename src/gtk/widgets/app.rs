@@ -1,3 +1,5 @@
+use crate::gtk::widgets::history::HistoryModel;
+
 use gtk::prelude::{
     ButtonExt,
     GtkWindowExt,
@@ -9,18 +11,22 @@ use relm4::{
     component,
     gtk,
     SimpleComponent,
+    Controller,
     ComponentSender,
     ComponentParts,
-    RelmWidgetExt,
+    RelmWidgetExt, Component, ComponentController,
 };
+
 
 #[derive(Debug)]
 pub struct App {
-
+    history: Controller<HistoryModel>,
 }
 
 #[derive(Debug)]
-pub enum AppMsg {}
+pub enum AppMsg {
+    TODO
+}
 
 pub struct AppInit {}
 
@@ -90,6 +96,9 @@ impl SimpleComponent for App {
                             gtk::Label {
                                 set_label: "Example Device 1",
                             },
+                            #[local_ref]
+                            history_widget -> gtk::ScrolledWindow {
+                            },
                         },
                     },
                 }
@@ -100,10 +109,15 @@ impl SimpleComponent for App {
     fn init(
         _init: Self::Init,
         root: &Self::Root,
-        _sender: ComponentSender<Self>,
+        sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
 
-        let model = App {};
+        let history = HistoryModel::builder()
+            .launch(()).forward(sender.input_sender(), |msg| ());
+        let model = App { history };
+
+        let history_widget = model.history.widget();
+
         let widgets = view_output!();
         ComponentParts { model, widgets }
     }
