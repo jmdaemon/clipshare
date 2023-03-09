@@ -217,7 +217,7 @@ impl SimpleComponent for HistoryModel {
             //let entry = HistoryEntry { last_copied: line, index };
             //let entry = HistoryEntry { last_copied: line };
             let entry = HistoryEntry { index, last_copied: line };
-            history.guard().push_back(entry);
+            history.guard().push_front(entry);
             index += 1;
         });
 
