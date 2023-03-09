@@ -27,3 +27,8 @@ const_format = "0.2.30"
 local-ip-address = "0.5.1"
 mdns = "3.0.0"
 mdns-sd = "0.6.1"
+
+[features]
+default = ["gtk"]
+gtk = ["relm4"]
+#winui = ["native_windows_gui"]
