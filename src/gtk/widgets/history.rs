@@ -1,9 +1,14 @@
 use gtk::prelude::{
-    ButtonExt,
     BoxExt,
+    ButtonExt,
     OrientableExt,
     WidgetExt,
+    //FrameExt,
 };
+//use gdk4::{
+    //Cursor::
+    
+//};
 
 use relm4::{
     factory::{FactoryView, FactoryVecDeque},
@@ -13,6 +18,7 @@ use relm4::{
     ComponentParts,
     FactorySender,
     SimpleComponent,
+    RelmWidgetExt,
 };
 
 #[derive(Debug)]
@@ -41,23 +47,32 @@ impl FactoryComponent for HistoryEntry {
     view! {
         #[root]
         gtk::ListBox {
-            set_selection_mode: gtk::SelectionMode::Single,
+            set_selection_mode: gtk::SelectionMode::None,
             gtk::Box {
                 set_orientation: gtk::Orientation::Horizontal,
                 set_spacing: 12,
                 set_hexpand: true,
-                gtk::Label {
-                    #[watch]
-                    set_label: &self.index.to_string(),
-                    set_width_chars: 8,
-                    set_xalign: 0.6,
-                },
-                gtk::Label {
-                    #[watch]
-                    set_label: &self.last_copied,
-                    set_width_chars: 128,
-                    set_xalign: 0.0,
-                },
+                    gtk::Label {
+                        #[watch]
+                        set_label: &self.index.to_string(),
+                        set_width_chars: 8,
+                        set_xalign: 0.6,
+                    },
+
+                    gtk::Label {
+                        set_css_classes: &["clipboard-entry"],
+                        set_can_target: true,
+
+                        #[watch]
+                        set_label: &self.last_copied,
+                        set_width_chars: 128,
+                        set_xalign: 0.00,
+                        //connect_cursor_notify[sender] => move |_| {
+                            //println!("Changed cursor");
+                            //gtk::Widget::set_cursor(&self, gdk::Cursor::);
+                            //gtk::Window::new().set_cursor(gtk::Widget::set_cursor(&self, cursor));
+                        //}
+                    },
                 gtk::Button {
                     set_height_request: 24,
                     set_label: "Copy"
@@ -75,6 +90,8 @@ impl FactoryComponent for HistoryEntry {
         index: &DynamicIndex,
         sender: FactorySender<Self>,
     ) -> Self {
+        //let a =gtk::Label::default();
+        //a.set_can_target(can_target)
         init
     }
 
@@ -150,6 +167,7 @@ impl SimpleComponent for HistoryModel {
 
         let model = HistoryModel { history };
         let history_box = model.history.widget();
+        relm4::set_global_css_from_file("src/gtk/widgets/history.css");
 
         let widgets = view_output!();
         ComponentParts { model, widgets }
