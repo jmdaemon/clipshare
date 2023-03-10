@@ -1,10 +1,13 @@
 use clipshare::{
     config::load_config,
     discover::{DeviceMonitor, handle_new_client, SERVICE_TYPE},
-    init_device,
+    device::init_device,
     ws::setup_client,
 };
-use std::{net::Ipv4Addr, sync::{Arc, Mutex}};
+use std::{
+    net::Ipv4Addr,
+    sync::{Arc, Mutex}
+};
 
 #[tokio::main]
 async fn main() {
