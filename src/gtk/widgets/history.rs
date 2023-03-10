@@ -11,7 +11,8 @@ use relm4::{
     prelude::{DynamicIndex, FactoryComponent},
     ComponentSender,
     ComponentParts,
-    FactorySender, SimpleComponent,
+    FactorySender,
+    SimpleComponent,
 };
 
 #[derive(Debug)]

@@ -13,12 +13,14 @@ use gtk::prelude::{
 
 use relm4::{
     component,
-    gtk,
-    SimpleComponent,
-    Controller,
-    ComponentSender,
+    Component,
+    ComponentController,
     ComponentParts,
-    RelmWidgetExt, Component, ComponentController,
+    ComponentSender,
+    Controller,
+    gtk,
+    RelmWidgetExt,
+    SimpleComponent,
 };
 
 #[derive(Debug)]
