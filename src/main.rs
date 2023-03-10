@@ -2,7 +2,7 @@ pub mod ws;
 
 use log::info;
 
-use clipshare::{Device, init_device, load_config};
+use clipshare::{Device, init_device, config::load_config};
 
 fn test_clipboard(dev: &mut Device) {
     println!("{}", dev.get_clipboard_conts());
