@@ -1,4 +1,4 @@
-use clipshare::{load_config, init_device};
+use clipshare::{config::load_config, init_device};
 use clipshare::ws::{Address, setup_server, poll_client_connections, Dev};
 use clipshare::ws::PeerMap;
 use clipshare::discover::{Device, SERVICE_TYPE};

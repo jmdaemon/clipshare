@@ -91,7 +91,6 @@ impl SimpleComponent for App {
                             set_hexpand: true,
                             set_vexpand: true,
 
-
                             gtk::Label {
                                 set_label: "Main"
                             },
