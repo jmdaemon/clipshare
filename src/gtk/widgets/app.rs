@@ -1,8 +1,6 @@
-use std::convert::identity;
-
 use crate::gtk::widgets::{
     history::HistoryModel,
-    configure::ConfigureDialog,
+    configure::{ConfigureDialog, ConfigureDialogInput},
 };
 
 use gtk::prelude::{
@@ -22,8 +20,6 @@ use relm4::{
     ComponentParts,
     RelmWidgetExt, Component, ComponentController,
 };
-
-use super::configure::ConfigureDialogMsg;
 
 #[derive(Debug)]
 pub struct App {
@@ -150,6 +146,7 @@ impl SimpleComponent for App {
         let model = App { history, device_dialog };
 
         let history_widget = model.history.widget();
+        model.device_dialog.widget().set_transient_for(Some(root));
 
         let widgets = view_output!();
         ComponentParts { model, widgets }
@@ -158,7 +155,7 @@ impl SimpleComponent for App {
     fn update(&mut self, message: Self::Input, _sender: ComponentSender<Self>) {
         match message {
             AppMsg::ShowDeviceConfigureDialog => {
-                self.device_dialog.sender().send(ConfigureDialogMsg::Show).unwrap();
+                self.device_dialog.sender().send(ConfigureDialogInput::Show).unwrap();
                 }
             }
             //_ => todo!()

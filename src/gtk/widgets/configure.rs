@@ -18,22 +18,23 @@ pub struct ConfigureDialog {
 }
 
 #[derive(Debug)]
-//pub enum ConfigureDialogInput {
-pub enum ConfigureDialogMsg {
+pub enum ConfigureDialogInput {
     Show,
     Close,
 }
 
 #[derive(Debug)]
-pub enum ConfigureDialogOutput {}
+pub enum ConfigureDialogOutput {
+    Close
+}
 
 //pub struct ConfigureDialogInit {}
 
 #[relm4::component(pub)]
 impl SimpleComponent for ConfigureDialog {
-    type Input = ConfigureDialogMsg;
-    type Output = ConfigureDialogOutput;
     type Init = bool;
+    type Input = ConfigureDialogInput;
+    type Output = ConfigureDialogOutput;
 
     view! {
         gtk::MessageDialog {
@@ -44,7 +45,9 @@ impl SimpleComponent for ConfigureDialog {
             //set_secondary_text: Some("All unsaved changes will be lost"),
             //add_button: ("Cancel", gtk::ResponseType::Cancel),
             add_button: ("Close", gtk::ResponseType::Close),
-            //connect_response[sender] => move |_, resp| {
+            connect_response[sender] => move |_, resp| {
+                sender.input(ConfigureDialogInput::Close);
+            },
                 //sender.input(if resp == gtk::ResponseType::Accept {
                     //DialogInput::Accept
                 //} else {
@@ -66,8 +69,8 @@ impl SimpleComponent for ConfigureDialog {
 
     fn update(&mut self, message: Self::Input, sender: ComponentSender<Self>) {
         match message {
-            ConfigureDialogMsg::Show => self.hidden = false,
-            ConfigureDialogMsg::Close => self.hidden = true,
+            ConfigureDialogInput::Show => self.hidden = false,
+            ConfigureDialogInput::Close => self.hidden = true,
         }
     }
 }
