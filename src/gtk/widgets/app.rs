@@ -65,16 +65,9 @@ impl SimpleComponent for App {
                     },
                     gtk::Button {
                         set_label: "Configure",
-                        //connect[sender] => move |_| {
                         connect_clicked[sender] => move |_| {
                             sender.input(AppMsg::ShowDeviceConfigureDialog);
-                            gtk::Inhibit(true);
                         }
-                        //connect_close_request[sender] => move |_| {
-                        //sender.input(AppMsg::CloseRequest);
-                        ////sender.input(AppMsg::CloseRequest);
-                        //gtk::Inhibit(true)
-                        //}
                     },
                 },
                 #[name="mainview"]
@@ -101,11 +94,6 @@ impl SimpleComponent for App {
                                 set_label: "Main"
                             },
                         },
-                        //} -> {
-                            //set_tab_label: "Main",
-                            //set_title: "Main",
-                            //set_name: "Main",
-                        //},
 
                         // Example Device 1
                         append_page[Some(&gtk::Label::new(Some("Example Device 1")))] = &gtk::ScrolledWindow {
@@ -133,8 +121,6 @@ impl SimpleComponent for App {
 
         let history = HistoryModel::builder()
             .launch(()).detach();
-            //.launch(()).forward(sender.input_sender(), |msg| );
-            //.launch(()).forward(sender.input_sender(), |msg| ());
             //.launch(()).forward(sender.input_sender(), |msg| ());
 
         let device_dialog = ConfigureDialog::builder()
@@ -156,9 +142,7 @@ impl SimpleComponent for App {
         match message {
             AppMsg::ShowDeviceConfigureDialog => {
                 self.device_dialog.sender().send(ConfigureDialogInput::Show).unwrap();
-                }
             }
-            //_ => todo!()
-        //}
+        }
     }
 }
