@@ -13,7 +13,7 @@ use serde::{Serialize, Deserialize};
 type Shortcuts = HashMap<String, String>;
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct Config {
+pub struct Settings {
     max_history: u64,
     shortcuts: Shortcuts,
 }
@@ -27,15 +27,15 @@ pub fn set_clipboard_conts(ctx: &mut ClipboardContext, conts: String) {
     ctx.set_contents(conts).expect("Could not set contents of clipboard");
 }
 
-impl Config {
-    pub fn default() -> Config {
+impl Settings {
+    pub fn default() -> Settings {
         let shortcuts = HashMap::from([
                 (String::from("Enable/Disable Device"), String::from("Ctrl + {}")),
         ]);
-        Config { max_history:10_000, shortcuts}
+        Settings { max_history:10_000, shortcuts}
     }
-    pub fn new(&self, max_history: u64, shortcuts: Shortcuts) -> Config {
-        Config { max_history, shortcuts }
+    pub fn new(&self, max_history: u64, shortcuts: Shortcuts) -> Settings {
+        Settings { max_history, shortcuts }
     }
 }
 
@@ -60,14 +60,14 @@ pub fn get_cfgfp() -> String {
 }
 
 /// Loads the cached config file
-pub fn load_config() -> Config {
+pub fn load_config() -> Settings {
     let cfgfp = get_cfgfp();
     let cfgfp = Path::new(&cfgfp);
 
-    let cfg: Config;
+    let cfg: Settings;
     let cfg_conts: String;
     if !cfgfp.exists() {
-        cfg = Config::default();
+        cfg = Settings::default();
         cfg_conts = serde_json::to_string(&cfg).unwrap();
         save_config(&cfg);
     } else {
@@ -79,7 +79,7 @@ pub fn load_config() -> Config {
 }
 
 /// Save the config to disk
-pub fn save_config(cfg: &Config) {
+pub fn save_config(cfg: &Settings) {
     let cfgfp = get_cfgfp();
     let cfg_json = serde_json::to_string_pretty(&cfg).unwrap();
     mk_cfg_dir();

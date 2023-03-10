@@ -13,3 +13,16 @@ pub mod winui;
 
 // Use all the log macros automatically
 #[macro_use] extern crate log;
+
+// Generic library helper functions
+use std::fs::File;
+use std::io::{self, BufRead};
+use std::path::Path;
+
+fn lines_from_file<P>(filename: P) -> io::Result<io::Lines<io::BufReader<File>>>
+where
+    P: AsRef<Path>,
+{
+    let file = File::open(filename)?;
+    Ok(io::BufReader::new(file).lines())
+}
