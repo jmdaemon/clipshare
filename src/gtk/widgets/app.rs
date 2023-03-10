@@ -1,6 +1,12 @@
-use crate::gtk::widgets::history::HistoryModel;
+use std::convert::identity;
+
+use crate::gtk::widgets::{
+    history::HistoryModel,
+    configure::ConfigureDialog,
+};
 
 use gtk::prelude::{
+    BoxExt,
     ButtonExt,
     GtkWindowExt,
     OrientableExt,
@@ -17,23 +23,26 @@ use relm4::{
     RelmWidgetExt, Component, ComponentController,
 };
 
+use super::configure::ConfigureDialogMsg;
 
 #[derive(Debug)]
 pub struct App {
     history: Controller<HistoryModel>,
+    device_dialog: Controller<ConfigureDialog>
 }
 
 #[derive(Debug)]
 pub enum AppMsg {
-    TODO
+    ShowDeviceConfigureDialog,
+    //TODO
 }
 
 pub struct AppInit {}
 
 #[component(pub)]
 impl SimpleComponent for App {
-    type Input = ();
-    type Output = AppMsg;
+    type Input = AppMsg;
+    type Output = ();
     type Init = AppInit;
 
     view! {
@@ -50,12 +59,26 @@ impl SimpleComponent for App {
                 gtk::Box {
                     set_orientation: gtk::Orientation::Horizontal,
                     set_margin_all: 5,
+                    set_spacing: 5,
 
                     gtk::Button {
                         set_label: "Settings",
                     },
                     gtk::Button {
                         set_label: "Shortcuts",
+                    },
+                    gtk::Button {
+                        set_label: "Configure",
+                        //connect[sender] => move |_| {
+                        connect_clicked[sender] => move |_| {
+                            sender.input(AppMsg::ShowDeviceConfigureDialog);
+                            gtk::Inhibit(true);
+                        }
+                        //connect_close_request[sender] => move |_| {
+                        //sender.input(AppMsg::CloseRequest);
+                        ////sender.input(AppMsg::CloseRequest);
+                        //gtk::Inhibit(true)
+                        //}
                     },
                 },
                 #[name="mainview"]
@@ -113,8 +136,18 @@ impl SimpleComponent for App {
     ) -> ComponentParts<Self> {
 
         let history = HistoryModel::builder()
-            .launch(()).forward(sender.input_sender(), |msg| ());
-        let model = App { history };
+            .launch(()).detach();
+            //.launch(()).forward(sender.input_sender(), |msg| );
+            //.launch(()).forward(sender.input_sender(), |msg| ());
+            //.launch(()).forward(sender.input_sender(), |msg| ());
+
+        let device_dialog = ConfigureDialog::builder()
+            .launch(true)
+            .detach();
+            //.forward(sender.input_sender(), |msg| match msg {
+                ////DialogOutput::Close => AppMsg::Close,
+            //});
+        let model = App { history, device_dialog };
 
         let history_widget = model.history.widget();
 
@@ -122,8 +155,12 @@ impl SimpleComponent for App {
         ComponentParts { model, widgets }
     }
 
-    fn update(&mut self, _message: Self::Input, _sender: ComponentSender<Self>) {
-        //match message {
+    fn update(&mut self, message: Self::Input, _sender: ComponentSender<Self>) {
+        match message {
+            AppMsg::ShowDeviceConfigureDialog => {
+                self.device_dialog.sender().send(ConfigureDialogMsg::Show).unwrap();
+                }
+            }
             //_ => todo!()
         //}
     }
