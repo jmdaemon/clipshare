@@ -1,3 +1,5 @@
+use crate::device::Device;
+
 use std::{
     fmt,
     collections::HashMap,
@@ -6,9 +8,13 @@ use std::{
 };
 
 use futures::{
-    channel, future, pin_mut, StreamExt,
+    channel,
     channel::mpsc::{unbounded, UnboundedSender},
-    stream::{TryStreamExt}, join,
+    future,
+    join,
+    pin_mut,
+    StreamExt,
+    stream::{TryStreamExt},
 };
 use tokio::{
     net::{TcpListener, TcpStream},
@@ -18,7 +24,6 @@ use tokio::{
 use tokio_tungstenite::{connect_async, tungstenite::protocol::Message};
 use local_ip_address::local_ip;
 
-use crate::Device;
 
 /*
  * 1. Initialize event bus

@@ -1,19 +1,19 @@
-use clipshare::{config::load_config, init_device};
-use clipshare::ws::{Address, setup_server, poll_client_connections, Dev};
-use clipshare::ws::PeerMap;
-use clipshare::discover::{Device, SERVICE_TYPE};
+use clipshare::{
+    config::load_config,
+    device::init_device,
+    ws::{Address, Dev, PeerMap, poll_client_connections, setup_server},
+    discover::{Device, SERVICE_TYPE}
+};
 
-use std::sync::Arc;
 use std::{
     thread::sleep,
     time::Duration,
-    sync::Mutex,
+    sync::{Arc, Mutex},
     collections::HashMap,
 };
 use local_ip_address::local_ip;
 
 // Create server
-//pub async fn start_server(dev: &mut Device, address: Arc<Address>) {
 pub async fn start_server(dev: Dev, address: Arc<Address>) {
     let addr = address.to_string();
     let server = setup_server(addr.clone());
