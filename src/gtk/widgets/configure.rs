@@ -1,7 +1,6 @@
 use gtk::prelude::{
     BoxExt,
     ButtonExt,
-    GtkWindowExt,
     OrientableExt,
     WidgetExt,
 };
@@ -18,12 +17,14 @@ use relm4::{
 pub struct DevicesView {}
 
 #[derive(Debug)]
-pub enum DeviceInput {}
+pub enum DeviceInput {
+    FindDevices,
+    PairDevice,
+    UnpairDevice,
+}
 
 #[derive(Debug)]
 pub enum DeviceOutput {}
-
-//pub struct DeviceInit {}
 
 #[relm4::component(pub)]
 impl SimpleComponent for DevicesView {
@@ -31,24 +32,21 @@ impl SimpleComponent for DevicesView {
     type Output = DeviceOutput;
     type Init = ();
 
+    // TODO: Implement Drop that shuts down the widget discover daemon
     view! {
         #[root]
         gtk::Box {
             set_orientation: gtk::Orientation::Vertical,
-            //set_margin_all: 12,
-            //set_margin: 12,
-            //set_margin_all: 5,
             set_margin_all: 12,
             set_margin_end: 0,
 
             set_spacing: 12,
             set_width_request: 100,
+            // Current Device Name
             gtk::Box {
-                //set_width_request: 200,
                 set_orientation: gtk::Orientation::Horizontal,
                 gtk::Label {
                     set_height_request: 24,
-                    //set_width_chars: 64,
                     set_width_chars: 32,
                     set_label: "Current Hostname",
                 },
@@ -57,32 +55,24 @@ impl SimpleComponent for DevicesView {
                 },
             },
 
+            // Paired Devices
             gtk::ListBox {
-            //gtk::Box {
-                //set_spacing: 6,
-                //set_orientation: gtk::Orientation::Vertical,
-                //set_width_request: 200,
                 set_vexpand: true,
 
                 gtk::Label {
-                    //set_height_request: 32,
                     set_height_request: 24,
                     set_label: "Arch Laptop",
                 },
                 gtk::Label {
-                    //set_height_request: 32,
                     set_height_request: 24,
                     set_label: "Arch Desktop",
                 },
             },
+            // Refresh Button
             gtk::Button {
-                //set_halign: gtk::Align::End,
                 set_valign: gtk::Align::End,
-                //set_hexpand: true,
                 set_label: "Refresh",
             },
-            //gtk::Stack {
-            //},
         }
     }
 
@@ -98,7 +88,15 @@ impl SimpleComponent for DevicesView {
 
     fn update(&mut self, message: Self::Input, sender: ComponentSender<Self>) {
         match message {
-
+            DeviceInput::FindDevices => {
+                // Start the daemon
+            },
+            DeviceInput::PairDevice => {
+                // Create device config
+            },
+            DeviceInput::UnpairDevice => {
+                // Remove device config
+            },
         }
     }
 }
