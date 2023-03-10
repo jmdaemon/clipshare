@@ -1,6 +1,6 @@
 use crate::gtk::widgets::{
     history::HistoryModel,
-    configure::{ConfigureDialog, ConfigureDialogInput},
+    configure_dialog::{ConfigureDialog, ConfigureDialogInput},
 };
 
 use gtk::prelude::{
