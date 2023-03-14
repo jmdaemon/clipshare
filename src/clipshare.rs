@@ -2,7 +2,7 @@ use crate::{
     config::{Settings, SettingsBuilder},
     device::init_device,
     discover::{DeviceMonitor, handle_new_client, SERVICE_TYPE},
-    ws::{Dev, Address, setup_client},
+    ws::{Dev, Address, setup_client, AddressBuilder},
 };
 
 use std::{
@@ -24,9 +24,7 @@ impl Default for Client {
     fn default() -> Self {
         let settings = SettingsBuilder::new().build();
         let device = Arc::new(Mutex::new(init_device()));
-        let ip = Ipv4Addr::LOCALHOST;
-        let port = 5200;
-        let address = Address::new(ip.to_string(), port);
+        let address = AddressBuilder::new().build();
         Client { settings, device, address }
     }
 }
