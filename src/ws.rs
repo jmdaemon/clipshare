@@ -3,7 +3,7 @@ use crate::device::Device;
 use std::{
     fmt,
     collections::HashMap,
-    net::SocketAddr,
+    net::{SocketAddr, Ipv4Addr},
     sync::{Arc, Mutex},
 };
 
@@ -38,9 +38,10 @@ pub struct Address {
     pub port: u32,
 }
 
-//pub struct AddressBuilder {
-    //pub address: Address,
-//}
+#[derive(Default)]
+pub struct AddressBuilder {
+    pub address: Address,
+}
 
 pub struct Client {
     pub addr: Address,
@@ -105,6 +106,34 @@ impl Address {
 impl fmt::Display for Address {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.fmt())
+    }
+}
+
+impl Default for Address {
+    fn default() -> Self {
+        let ip = Ipv4Addr::LOCALHOST;
+        let port = 5200;
+        Address { ip: ip.to_string(), port }
+    }
+}
+
+impl AddressBuilder {
+    pub fn new() -> Self {
+        Default::default()
+    }
+
+    pub fn build(self) -> Address {
+        self.address
+    }
+
+    pub fn ip(mut self, ip: String) -> Self {
+        self.address.ip = ip;
+        self
+    }
+
+    pub fn port(mut self, port: u32) -> Self {
+        self.address.port = port;
+        self
     }
 }
 

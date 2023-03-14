@@ -1,12 +1,14 @@
 use clipshare::{
     clipshare::Client,
-    ws::Address
+    ws::AddressBuilder,
 };
 
 #[tokio::main]
 async fn main() {
     let client = Client::new();
     let addr = client.monitor_devices().await;
-    let address = Address::new(addr.to_string(), 5200);
+    let address = AddressBuilder::new()
+        .ip(addr.to_string())
+        .build();
     client.connect_to(address).await;
 }
