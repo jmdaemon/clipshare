@@ -1,4 +1,4 @@
-use crate::{config::{get_clipboard_conts, set_clipboard_conts}, lines_from_file};
+use crate::lines_from_file;
 use clipboard::{ClipboardContext, ClipboardProvider};
 
 use std::path::Path;
@@ -18,6 +18,15 @@ pub struct Device {
         //Self { name, history, clipboard }
     //}
 //}
+
+// Clipboard
+pub fn get_clipboard_conts(ctx: &mut ClipboardContext) -> String {
+    ctx.get_contents().unwrap()
+}
+
+pub fn set_clipboard_conts(ctx: &mut ClipboardContext, conts: String) {
+    ctx.set_contents(conts).expect("Could not set contents of clipboard");
+}
 
 impl Device {
     pub fn new(name: String, history: Vec<String>, clipboard: ClipboardContext) -> Device {
@@ -85,3 +94,4 @@ pub fn init_device() -> Device {
     });
     dev
 }
+

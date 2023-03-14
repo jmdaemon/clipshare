@@ -1,14 +1,17 @@
 use crate::consts::{QUALIFIER, ORGANIZATION, APPLICATION};
 use std::{
     fs::{create_dir_all, read_to_string, write},
-    path::{Path, PathBuf},
+    path::PathBuf,
     collections::HashMap,
 };
 
 use derivative::Derivative;
 use directories::ProjectDirs;
+use serde::{Serialize, Deserialize};
 
-/// Stores the path of an application config file
+type Shortcuts = HashMap<String, String>;
+
+/// Manage application config files
 #[derive(Derivative)]
 #[derivative(Debug, Default, Clone)]
 pub struct Config {
@@ -40,61 +43,7 @@ impl Config {
     }
 }
 
-/*
-pub struct ConfigFile<T> {
-    pub config: Config,
-    _marker: PhantomData<T>,
-}
-
-// Functions to use when serializing/deserializing
-pub trait SerdeDispatch<'de>: Sized {
-    fn serialize() -> String;
-    fn deserialize<D>(cfg: D) -> String
-        where D: Deserialize<'de>;
-        //where D: Deserializer<'de>;
-}
-
-pub struct Json;
-
-impl <'de> SerdeDispatch<'de> for Json {
-    fn deserialize(cfg: Box<impl Serialize>) -> String {
-        serde_json::to_string(&cfg).unwrap()
-    }
-    
-    //fn deserialize<D>(cfg: D) -> String
-    fn serialize<D>(cfg: D) -> String
-    where
-        //D: Deserialize<'de>
-        D: Deserializer<'de>
-    {
-        //serde_json::to_string(&cfg).unwrap()
-        //serde_json::to_string(&cfg).unwrap()
-        //serde_json::to_string_pretty(&cfg).unwrap()
-        serde_json::from_str(&cfg).unwrap()
-    }
-}
-
-//pub enum FileType {
-    //JSON
-//}
-
-*/
-
-
-use clipboard::{ClipboardContext, ClipboardProvider};
-use serde::{Serialize, Deserialize, Deserializer};
-
-type Shortcuts = HashMap<String, String>;
-
-// Clipboard
-pub fn get_clipboard_conts(ctx: &mut ClipboardContext) -> String {
-    ctx.get_contents().unwrap()
-}
-
-pub fn set_clipboard_conts(ctx: &mut ClipboardContext, conts: String) {
-    ctx.set_contents(conts).expect("Could not set contents of clipboard");
-}
-
+/// Store application settings
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Settings {
     max_history: u64,
@@ -139,5 +88,42 @@ impl Settings {
         self.config.make_dirs();
         let conts = serde_json::to_string_pretty(&self).unwrap();
         self.config.write(&conts).expect("Could not save settings to disk");
+    }
+}
+
+/// Builder to construct Settings more easily
+#[derive(Default)]
+pub struct SettingsBuilder {
+    //pub max_history: Option<u64>,
+    //pub shortcuts: Option<Shortcuts>,
+    //pub config: Option<Config>,
+    pub settings: Settings,
+}
+
+impl SettingsBuilder {
+    pub fn new() -> Self {
+        SettingsBuilder { settings: Settings::default() }
+        //let settings = Settings::default();
+        //let builder = SettingsBuilder { max_history: settings.max_history };
+        //builder
+    }
+
+    pub fn build(self) -> Settings {
+        self.settings
+    }
+
+    pub fn max_history(mut self, max_history: u64) -> Self {
+        self.settings.max_history = max_history;
+        self
+    }
+
+    pub fn shortcuts(mut self, shortcuts: Shortcuts) -> Self {
+        self.settings.shortcuts = shortcuts;
+        self
+    }
+
+    pub fn config(mut self, config: Config) -> Self {
+        self.settings.config = config;
+        self
     }
 }
