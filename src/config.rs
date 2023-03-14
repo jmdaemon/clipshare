@@ -94,18 +94,12 @@ impl Settings {
 /// Builder to construct Settings more easily
 #[derive(Default)]
 pub struct SettingsBuilder {
-    //pub max_history: Option<u64>,
-    //pub shortcuts: Option<Shortcuts>,
-    //pub config: Option<Config>,
     pub settings: Settings,
 }
 
 impl SettingsBuilder {
     pub fn new() -> Self {
         SettingsBuilder { settings: Settings::default() }
-        //let settings = Settings::default();
-        //let builder = SettingsBuilder { max_history: settings.max_history };
-        //builder
     }
 
     pub fn build(self) -> Settings {

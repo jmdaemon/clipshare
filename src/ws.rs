@@ -38,6 +38,10 @@ pub struct Address {
     pub port: u32,
 }
 
+//pub struct AddressBuilder {
+    //pub address: Address,
+//}
+
 pub struct Client {
     pub addr: Address,
 }
@@ -79,6 +83,10 @@ pub struct ClipboardChannel {
 // TODO: Cache device configuration details to disk. Use serde
 
 impl Address {
+    pub fn new(ip: String, port: u32) -> Self {
+        Self { ip, port }
+    }
+
     pub fn fmt(&self) -> String {
         format!("{}:{}", self.ip, self.port)
     }
