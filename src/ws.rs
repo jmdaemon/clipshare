@@ -1,70 +1,38 @@
+// Common Imports
 use crate::device::Device;
+use futures::{
+    channel::mpsc::{unbounded, UnboundedSender},
+    join,
+};
 
+
+// Client Imports
+use tokio_tungstenite::connect_async;
+
+// Server Imports
 use std::{
     fmt,
     collections::HashMap,
     net::{SocketAddr, Ipv4Addr},
     sync::{Arc, Mutex},
+    str::FromStr,
+    num::ParseIntError,
 };
 
 use futures::{
-    channel,
-    channel::mpsc::{unbounded, UnboundedSender},
     future,
-    join,
     pin_mut,
     StreamExt,
     stream::{TryStreamExt},
 };
+
 use tokio::{
     net::{TcpListener, TcpStream},
     sync::broadcast,
     sync::broadcast::{Sender, Receiver},
 };
-use tokio_tungstenite::{connect_async, tungstenite::protocol::Message};
-use local_ip_address::local_ip;
 
-
-/*
- * 1. Initialize event bus
- * 2. Create async task: notify_changed() -> { Send ClipboardEvent::LastCopiedChanged() }
- * 3. Create async task: on_changed() -> { Listen for ClipboardEvent::LastCopiedChanged(), and send App::UpdateClientRequest(String) }
- * 4. In server, listen for App events, and notify to all clients
- * 5. In client, listen for App event, and sync local changes to current_device clipboard
- */
-
-pub struct Address {
-    pub ip: String,
-    pub port: u32,
-}
-
-#[derive(Default)]
-pub struct AddressBuilder {
-    pub address: Address,
-}
-
-pub struct Client {
-    pub addr: Address,
-}
-
-pub struct Server {
-    pub addr: Address,
-}
-
-// Types
-pub type Tx = UnboundedSender<Message>;
-pub type PeerMap = Arc<Mutex<HashMap<SocketAddr, Tx>>>;
-pub type Dev = Arc<Mutex<Device>>;
-
-#[derive(Debug, Clone)]
-pub enum ClipboardEvent {
-    ReceiveCopied(String),
-}
-
-pub struct ClipboardChannel {
-    s: Sender<ClipboardEvent>,
-    r: Receiver<ClipboardEvent>,
-}
+use tokio_tungstenite::tungstenite::protocol::Message;
 
 // Implementations
 
@@ -83,40 +51,56 @@ pub struct ClipboardChannel {
 
 // TODO: Cache device configuration details to disk. Use serde
 
-impl Address {
-    pub fn new(ip: String, port: u32) -> Self {
-        Self { ip, port }
-    }
+/// Stores device ip address and port
+pub struct Address {
+    pub ip: String,
+    pub port: u32,
+}
 
-    pub fn fmt(&self) -> String {
-        format!("{}:{}", self.ip, self.port)
-    }
+/// Stores device address defaults
+#[derive(Default)]
+pub struct AddressBuilder {
+    pub address: Address,
+}
 
-    pub fn from_str(s: String) -> Address {
-        let addr_vec: Vec<&str> = s.split(":").collect();
-        //let ip = addr_vec[0];
-        //let port: u32 = addr_vec[1].parse().unwrap();
-        let (ip, port) = (addr_vec[0], addr_vec[1].parse().unwrap());
-        //let port: u32 = addr_vec[1].parse().unwrap();
+// Types
+pub type Tx = UnboundedSender<Message>;
+pub type PeerMap = Arc<Mutex<HashMap<SocketAddr, Tx>>>;
+pub type Dev = Arc<Mutex<Device>>;
 
-        Address { ip: ip.to_owned(), port }
+// Address
+impl Default for Address {
+    fn default() -> Self {
+        let ip = Ipv4Addr::LOCALHOST;
+        let port = 5200;
+        Address::new(ip.to_string(), port)
     }
 }
 
 impl fmt::Display for Address {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.fmt())
+        let addr = format!("{}:{}", self.ip, self.port);
+        write!(f, "{}", addr)
     }
 }
 
-impl Default for Address {
-    fn default() -> Self {
-        let ip = Ipv4Addr::LOCALHOST;
-        let port = 5200;
-        Address { ip: ip.to_string(), port }
+impl FromStr for Address {
+    type Err = ParseIntError;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let addr_vec: Vec<&str> = s.split(':').collect();
+        let (ip, port) = (addr_vec[0], addr_vec[1].parse()?);
+        let address = Address { ip: ip.to_owned(), port };
+        Ok(address)
     }
 }
 
+impl Address {
+    pub fn new(ip: String, port: u32) -> Self {
+        Self { ip, port }
+    }
+}
+
+// AddressBuilder
 impl AddressBuilder {
     pub fn new() -> Self {
         Default::default()
@@ -137,22 +121,7 @@ impl AddressBuilder {
     }
 }
 
-impl Client { }
-impl Server {
-    pub fn get_ip_addr() -> Address {
-        let my_local_ip = local_ip().unwrap();
-        Address::from_str(my_local_ip.to_string())
-    }
-}
-
 // Async
-impl ClipboardChannel {
-    pub fn new() -> ClipboardChannel {
-        let (s, r): (Sender<ClipboardEvent>, Receiver<ClipboardEvent>) = broadcast::channel(32);
-        ClipboardChannel { s, r }
-    }
-}
-
 /// Listen for client connections
 pub async fn setup_server(addr: String) -> TcpListener {
     let try_socket = TcpListener::bind(addr.clone()).await;
@@ -209,7 +178,6 @@ pub async fn handle_connection(mut dev: Dev, peer_map: PeerMap, raw_stream: TcpS
     peer_map.lock().unwrap().remove(&addr);
 }
 
-
 // Accepts new client connections
 pub async fn poll_client_connections(dev: Dev, srv: TcpListener, state: PeerMap) {
     while let Ok((stream, addr)) = srv.accept().await {
@@ -228,7 +196,7 @@ pub async fn clipboard_changed(dev: &Dev) -> String {
     }
 }
 
-pub async fn send_on_clipboard_change(tx: channel::mpsc::UnboundedSender<Message>, dev: Dev) {
+pub async fn send_on_clipboard_change(tx: UnboundedSender<Message>, dev: Dev) {
     let clone_dev = dev.clone();
     loop {
         let conts = clipboard_changed(&clone_dev).await;
@@ -242,7 +210,7 @@ pub async fn send_on_clipboard_change(tx: channel::mpsc::UnboundedSender<Message
 pub async fn setup_client(dev: Dev, connect_addr: String) {
     let url = url::Url::parse(&connect_addr).unwrap();
 
-    let (stdin_tx, stdin_rx) = channel::mpsc::unbounded();
+    let (stdin_tx, stdin_rx) = unbounded();
     tokio::spawn(send_on_clipboard_change(stdin_tx, dev));
 
     let (ws_stream, _) = connect_async(url).await.expect("Failed to connect");
