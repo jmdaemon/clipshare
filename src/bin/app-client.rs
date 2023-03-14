@@ -1,8 +1,8 @@
 use clipshare::{
-    config::load_config,
     discover::{DeviceMonitor, handle_new_client, SERVICE_TYPE},
     device::init_device,
     ws::setup_client,
+    config::Settings,
 };
 use std::{
     net::Ipv4Addr,
@@ -12,7 +12,7 @@ use std::{
 #[tokio::main]
 async fn main() {
     // Load the clipboard for the current device
-    let _cfg = load_config();
+    let _settings = Settings::default().load_config();
     let dev = init_device();
     let device = Arc::new(Mutex::new(dev));
 

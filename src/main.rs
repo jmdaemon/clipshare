@@ -1,4 +1,7 @@
-use clipshare::{device::{Device, init_device}, config::load_config};
+use clipshare::{
+    device::{Device, init_device},
+    config::Settings,
+};
 #[macro_use] extern crate log;
 
 fn test_clipboard(dev: &mut Device) {
@@ -11,7 +14,7 @@ fn main() {
     pretty_env_logger::init();
     info!("Copying to clipboard");
 
-    let _cfg = load_config();
+    let _settings = Settings::default().load_config();
     let mut dev = init_device();
     test_clipboard(&mut dev);
 }

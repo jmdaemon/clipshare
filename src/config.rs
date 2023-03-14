@@ -1,22 +1,90 @@
 use crate::consts::{QUALIFIER, ORGANIZATION, APPLICATION};
 use std::{
-    fs,
-    fs::read_to_string,
-    path::Path,
+    fs::{create_dir_all, read_to_string, write},
+    path::{Path, PathBuf},
     collections::HashMap,
 };
 
+use derivative::Derivative;
 use directories::ProjectDirs;
+
+/// Stores the path of an application config file
+#[derive(Derivative)]
+#[derivative(Debug, Default, Clone)]
+pub struct Config {
+    #[derivative(Default(value = "ProjectDirs::from(QUALIFIER, ORGANIZATION, APPLICATION).expect(\"Could not initialize config\")"))]
+    pub project_dirs: ProjectDirs,
+    pub path: PathBuf,
+}
+
+impl Config {
+    pub fn new(file: impl Into<String>) -> Config {
+        let cfg = Config::default();
+        Config {path: cfg.format_path(file.into()), ..cfg}
+    }
+
+    fn format_path(&self, config: impl Into<String>) -> PathBuf {
+        self.project_dirs.config_dir().to_path_buf().join(config.into())
+    }
+
+    pub fn make_dirs(&self) {
+        create_dir_all(self.project_dirs.config_dir()).expect("Could not create config directory")
+    }
+
+    pub fn read(&self) -> String {
+        read_to_string(&self.path).expect("Could not read config file.")
+    }
+
+    pub fn write(&self, conts: &str) -> std::io::Result<()> {
+        write(&self.path, conts)
+    }
+}
+
+/*
+pub struct ConfigFile<T> {
+    pub config: Config,
+    _marker: PhantomData<T>,
+}
+
+// Functions to use when serializing/deserializing
+pub trait SerdeDispatch<'de>: Sized {
+    fn serialize() -> String;
+    fn deserialize<D>(cfg: D) -> String
+        where D: Deserialize<'de>;
+        //where D: Deserializer<'de>;
+}
+
+pub struct Json;
+
+impl <'de> SerdeDispatch<'de> for Json {
+    fn deserialize(cfg: Box<impl Serialize>) -> String {
+        serde_json::to_string(&cfg).unwrap()
+    }
+    
+    //fn deserialize<D>(cfg: D) -> String
+    fn serialize<D>(cfg: D) -> String
+    where
+        //D: Deserialize<'de>
+        D: Deserializer<'de>
+    {
+        //serde_json::to_string(&cfg).unwrap()
+        //serde_json::to_string(&cfg).unwrap()
+        //serde_json::to_string_pretty(&cfg).unwrap()
+        serde_json::from_str(&cfg).unwrap()
+    }
+}
+
+//pub enum FileType {
+    //JSON
+//}
+
+*/
+
+
 use clipboard::{ClipboardContext, ClipboardProvider};
-use serde::{Serialize, Deserialize};
+use serde::{Serialize, Deserialize, Deserializer};
 
 type Shortcuts = HashMap<String, String>;
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct Settings {
-    max_history: u64,
-    shortcuts: Shortcuts,
-}
 
 // Clipboard
 pub fn get_clipboard_conts(ctx: &mut ClipboardContext) -> String {
@@ -27,61 +95,49 @@ pub fn set_clipboard_conts(ctx: &mut ClipboardContext, conts: String) {
     ctx.set_contents(conts).expect("Could not set contents of clipboard");
 }
 
-impl Settings {
-    pub fn default() -> Settings {
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Settings {
+    max_history: u64,
+    shortcuts: Shortcuts,
+    #[serde(skip)]
+    pub config: Config,
+}
+
+impl Default for Settings {
+    fn default() -> Self {
+        let max_history = 10_000;
         let shortcuts = HashMap::from([
-                (String::from("Enable/Disable Device"), String::from("Ctrl + {}")),
+            ("Enable/Disable Device".to_owned(), "Ctrl + {}".to_owned()),
         ]);
-        Settings { max_history:10_000, shortcuts}
-    }
-    pub fn new(&self, max_history: u64, shortcuts: Shortcuts) -> Settings {
-        Settings { max_history, shortcuts }
+        let config = Config::new("config.json");
+        Settings { max_history, shortcuts, config }
     }
 }
 
-// Project Directories
-pub fn get_proj_dirs() -> ProjectDirs {
-    ProjectDirs::from(QUALIFIER, ORGANIZATION, APPLICATION).unwrap()
-}
-
-pub fn mk_cfg_dir() {
-    let proj_dirs = get_proj_dirs();
-    let cfg_dir = proj_dirs.config_dir();
-    if !cfg_dir.exists() {
-        fs::create_dir_all(cfg_dir).expect("Could not create config file");
-        info!("Created {}", cfg_dir.display());
+impl Settings {
+    pub fn new(&self, max_history: u64, shortcuts: Shortcuts, config: Config) -> Self {
+        Settings { max_history, shortcuts, config }
     }
-    info!("Using config directory: {}", cfg_dir.display());
-}
 
-pub fn get_cfgfp() -> String {
-    let proj_dirs = get_proj_dirs();
-    format!("{}/{}", proj_dirs.config_dir().to_str().unwrap(), "config.json")
-}
-
-/// Loads the cached config file
-pub fn load_config() -> Settings {
-    let cfgfp = get_cfgfp();
-    let cfgfp = Path::new(&cfgfp);
-
-    let cfg: Settings;
-    let cfg_conts: String;
-    if !cfgfp.exists() {
-        cfg = Settings::default();
-        cfg_conts = serde_json::to_string(&cfg).unwrap();
-        save_config(&cfg);
-    } else {
-        cfg_conts = read_to_string(cfgfp).expect("Could not read config file");
-        cfg = serde_json::from_str(&cfg_conts).unwrap();
+    pub fn load_config(&mut self) -> Self {
+        //let file = self.config.format_path(self.config.path.to_str().unwrap());
+        let file = &self.config.path;
+        let settings: Settings = if file.exists() {
+            // Read config file into memory
+            let conts = read_to_string(file).expect("Could not read config file");
+            let mut settings: Settings = serde_json::from_str(&conts).unwrap();
+            settings.config = self.config.to_owned();
+            settings
+        } else {
+            // Load the default settings
+            Settings::default()
+        };
+        settings
     }
-    info!("Config:\n{}", cfg_conts);
-    cfg
-}
 
-/// Save the config to disk
-pub fn save_config(cfg: &Settings) {
-    let cfgfp = get_cfgfp();
-    let cfg_json = serde_json::to_string_pretty(&cfg).unwrap();
-    mk_cfg_dir();
-    fs::write(cfgfp, cfg_json).expect("Unable to write file.");
+    pub fn save(&self) {
+        self.config.make_dirs();
+        let conts = serde_json::to_string_pretty(&self).unwrap();
+        self.config.write(&conts).expect("Could not save settings to disk");
+    }
 }

@@ -1,8 +1,8 @@
 use clipshare::{
-    config::load_config,
     device::init_device,
     ws::{Address, Dev, PeerMap, poll_client_connections, setup_server},
-    discover::{Device, SERVICE_TYPE}
+    discover::{Device, SERVICE_TYPE},
+    config::Settings
 };
 
 use std::{
@@ -53,7 +53,7 @@ pub async fn register_device(address: Arc<Address>) {
 #[tokio::main]
 pub async fn main() {
     // Load the clipboard for the current device
-    let _cfg = load_config();
+    let _settings = Settings::default().load_config();
     let dev = init_device();
 
     let device = Arc::new(Mutex::new(dev));
