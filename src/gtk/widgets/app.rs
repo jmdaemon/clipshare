@@ -1,6 +1,7 @@
 use crate::gtk::widgets::{
     history::HistoryModel,
     configure_dialog::{ConfigureDialog, ConfigureDialogInput},
+    device_view::DeviceView,
 };
 
 use gtk::prelude::{
@@ -26,12 +27,15 @@ use relm4::{
 #[derive(Debug)]
 pub struct App {
     history: Controller<HistoryModel>,
-    device_dialog: Controller<ConfigureDialog>
+    device_dialog: Controller<ConfigureDialog>,
+    device_view: Controller<DeviceView>
 }
 
 #[derive(Debug)]
 pub enum AppMsg {
     ShowDeviceConfigureDialog,
+    AddDevice,
+    RemoveDevice,
     //TODO
 }
 
@@ -79,6 +83,11 @@ impl SimpleComponent for App {
                     set_hexpand: true,
                     set_vexpand: true,
 
+                    #[local_ref]
+                    device_view_widget -> gtk::Notebook {
+                    }
+
+                    /*
                     gtk::Notebook {
                         set_hexpand: true,
                         set_vexpand: true,
@@ -109,6 +118,7 @@ impl SimpleComponent for App {
                             },
                         },
                     },
+                    */
                 }
             }
         }
@@ -130,10 +140,13 @@ impl SimpleComponent for App {
             //.forward(sender.input_sender(), |msg| match msg {
                 ////DialogOutput::Close => AppMsg::Close,
             //});
-        let model = App { history, device_dialog };
+
+        let device_view = DeviceView::builder().launch(()).detach();
+        let model = App { history, device_dialog, device_view };
 
         let history_widget = model.history.widget();
         model.device_dialog.widget().set_transient_for(Some(root));
+        let device_view_widget = model.device_view.widget();
 
         let widgets = view_output!();
         ComponentParts { model, widgets }
@@ -143,7 +156,11 @@ impl SimpleComponent for App {
         match message {
             AppMsg::ShowDeviceConfigureDialog => {
                 self.device_dialog.sender().send(ConfigureDialogInput::Show).unwrap();
-            }
+            },
+            AppMsg::AddDevice => {
+            },
+            AppMsg::RemoveDevice => {
+            },
         }
     }
 }
