@@ -65,6 +65,25 @@ pub fn get_hostname() -> String {
         hostname::get().expect("Could not get hostname").to_str().unwrap().to_string()
 }
 
+pub fn create_device_tab_title(name: &str) -> gtk::Label {
+    gtk::Label::new(Some(name))
+}
+
+pub fn create_device(name: String) -> DeviceModel {
+    let history_builder = HistoryModel::builder();
+    let history_widget = history_builder.widget().to_owned();
+    let history = history_builder.launch(()).detach();
+    DeviceModel { name, history_widget, history }
+}
+
+pub fn add_device(name: String, root: &gtk::Notebook) -> DeviceModel {
+    let tab_title = create_device_tab_title(&name);
+    let device = create_device(name);
+
+    root.append_page(&device.history_widget, Some(&tab_title));
+    device
+}
+
 #[relm4::component(pub)]
 impl Component for DeviceView {
     type Input = DeviceViewInput;
@@ -86,24 +105,8 @@ impl Component for DeviceView {
         sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
 
-        let name = get_hostname();
-        let tab_title = gtk::Label::new(Some(&name));
-
-        let history_builder = HistoryModel::builder();
-        let history_widget = history_builder.widget().to_owned();
-        let history = history_builder.launch(()).detach();
-        let device = DeviceModel { name, history_widget, history };
-
-        //let history_widget = history_model.widget().to_owned();
-
-        //let history_model_widget = history_model.launch(()).detach();
-        //let history = history_builder.launch(()).detach();
-        //&device.history_builder.launch(()).detach();
-
-        //root.append_page(&history, Some(&tab_title));
-        //root.append_page(&device.history_builder.widget().to_owned(), Some(&tab_title));
-        root.append_page(&device.history_widget.to_owned(), Some(&tab_title));
-
+        let device = add_device(get_hostname(), root);
+        
         let mut device_pool = VecDeque::new();
         device_pool.push_back(device);
 
