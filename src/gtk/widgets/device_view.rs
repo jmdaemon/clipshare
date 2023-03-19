@@ -1,5 +1,4 @@
 use super::history::HistoryModel;
-
 use std::collections::VecDeque;
 use gtk::prelude::{
     BoxExt,
@@ -37,7 +36,7 @@ pub struct DeviceView {
 pub enum DeviceViewInput {
     AddDevice(String),
     RemoveDevice(String),
-    ReorderDevice(String, DynamicIndex, DynamicIndex),
+    ReorderDevice(String, u32),
 }
 
 pub fn get_hostname() -> String {
@@ -64,19 +63,18 @@ pub fn add_device(name: String, root: &gtk::Notebook) -> DeviceModel {
 }
 
 pub fn remove_device(name: String, root: &gtk::Notebook, device_pool: &DevicePool) {
-    //let page_num = root.pages();
-    //for page in page_num.into_iter() {
-        //let a = page.unwrap();
-    //}
-    //root.remove_page(page_num)
-    //root.append_page(&device.history_widget, Some(&tab_title));
-    //device
-    //let mut index = 0;
     for (index, dev) in device_pool.iter().enumerate() {
         if dev.name == name {
             root.remove_page(Some(index as u32));
         }
-        //index += 1;
+    }
+}
+
+pub fn reorder_device(name: String, root: &gtk::Notebook, device_pool: &DevicePool, to: u32) {
+    for dev in device_pool.iter() {
+        if dev.name == name {
+            root.reorder_child(&dev.history_widget, Some(to));
+        }
     }
 }
 
@@ -102,11 +100,14 @@ impl Component for DeviceView {
     ) -> ComponentParts<Self> {
 
         let device = add_device(get_hostname(), root);
-        
+        let device2 = add_device("Test Name".to_owned(), root);
+
         let mut device_pool = VecDeque::new();
         device_pool.push_back(device);
+        device_pool.push_back(device2);
 
         //remove_device(get_hostname(), root, &device_pool);
+        reorder_device(get_hostname(), root, &device_pool, 1);
 
         let model = DeviceView { device_pool };
 
@@ -121,16 +122,19 @@ impl Component for DeviceView {
         widgets: &mut Self::Widgets,
         message: Self::Input,
         sender: ComponentSender<Self>,
-        root: &Self::Root) {
+        root: &Self::Root
+    ) {
         match message {
-        DeviceViewInput::AddDevice(device_name) => {
+            DeviceViewInput::AddDevice(device_name) => {
                 let device = add_device(device_name, root);
                 self.device_pool.push_back(device);
             },
             DeviceViewInput::RemoveDevice(device_name) => {
                 remove_device(device_name, root, &self.device_pool);
             },
-            DeviceViewInput::ReorderDevice(device_name, from, to) => { }
+            DeviceViewInput::ReorderDevice(device_name, to) => {
+                reorder_device(device_name, root, &self.device_pool, to);
+            }
         }
     }
 }
