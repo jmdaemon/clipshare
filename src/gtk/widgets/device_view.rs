@@ -1,5 +1,4 @@
 use std::collections::VecDeque;
-
 use gtk::prelude::{
     BoxExt,
     ButtonExt,
@@ -15,7 +14,7 @@ use relm4::{
     WidgetRef,
     RelmWidgetExt,
     Controller,
-    Component,
+    Component, ComponentBuilder,
 };
 
 use super::history::{HistoryModel, HistoryModelWidgets};
@@ -23,9 +22,12 @@ use super::history::{HistoryModel, HistoryModelWidgets};
 #[derive(Debug)]
 pub struct DeviceModel {
     pub name: String,
-    pub history: Vec<String>,
-    pub history_model_widget: Controller<HistoryModel>,
+    //pub history: Vec<String>,
+    //pub history_widget: gtk::ScrolledWindow,
+    //pub history_model_widget: Controller<HistoryModel>,
+    //pub history_builder: ComponentBuilder<HistoryModel>,
     pub history_widget: gtk::ScrolledWindow,
+    pub history: Controller<HistoryModel>,
 }
 
 #[derive(Debug)]
@@ -53,31 +55,29 @@ pub enum DeviceViewInput {
     //}
 //}
 
+//pub fn create_history_widget() {
+    //let history_model = HistoryModel::builder();
+    //let history_widget = history_model.widget().to_owned();
+    //let history_model_widget = history_model.launch(()).detach();
+//}
+
+pub fn get_hostname() -> String {
+        hostname::get().expect("Could not get hostname").to_str().unwrap().to_string()
+}
+
 #[relm4::component(pub)]
-//impl SimpleComponent for DeviceView {
 impl Component for DeviceView {
     type Input = DeviceViewInput;
     type Output = ();
-    //type Init = DeviceModel;
     type Init = ();
     type CommandOutput = ();
 
     view! {
-        //#[root]
-        //gtk::Box {
-            //#[local_ref]
-            //view_widget -> gtk::Notebook {
-            //self.model.view -> gtk::Notebook {
-            //view = self.model.view {
-            //model.view -> gtk::Notebook {
-            //view_widget -> gtk::Notebook {
-            //view_widget -> gtk::Notebook {
-            #[root]
+           #[root]
             gtk::Notebook {
                 set_hexpand: true,
                 set_vexpand: true,
             }
-        //}
     }
 
     fn init(
@@ -86,31 +86,25 @@ impl Component for DeviceView {
         sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
 
-        // Add the current device
-        //let device = DeviceModel {
-            //name: hostname::get().unwrap().to_str().unwrap().to_owned(),
-            //history: vec![],
-        //};
-        //let mut device_pool = VecDeque::new();
-        //device_pool.push_back(init);
+        let name = get_hostname();
+        let tab_title = gtk::Label::new(Some(&name));
 
-        //let view = gtk::Notebook::new();
+        let history_builder = HistoryModel::builder();
+        let history_widget = history_builder.widget().to_owned();
+        let history = history_builder.launch(()).detach();
+        let device = DeviceModel { name, history_widget, history };
 
-        //let model = DeviceView { view, device_pool };
+        //let history_widget = history_model.widget().to_owned();
 
-        //
-        let device_name = hostname::get().expect("Could not get hostname").to_str().unwrap().to_string();
-        let tab_title = gtk::Label::new(Some(&device_name));
+        //let history_model_widget = history_model.launch(()).detach();
+        //let history = history_builder.launch(()).detach();
+        //&device.history_builder.launch(()).detach();
 
-        let history_model = HistoryModel::builder();
-        let history_widget = history_model.widget().to_owned();
-
-        let history_model_widget = history_model.launch(()).detach();
-
-        let device = DeviceModel { name: device_name, history: vec![], history_model_widget, history_widget,  };
+        //root.append_page(&history, Some(&tab_title));
+        //root.append_page(&device.history_builder.widget().to_owned(), Some(&tab_title));
+        root.append_page(&device.history_widget.to_owned(), Some(&tab_title));
 
         let mut device_pool = VecDeque::new();
-        root.append_page(&device.history_widget, Some(&tab_title));
         device_pool.push_back(device);
 
         //self.view.append_page(&device.history_widget, Some(&tab_title));
@@ -140,6 +134,7 @@ impl Component for DeviceView {
         match message {
         DeviceViewInput::AddDevice(device_name) => {
                 // Add to the view
+            /*
                 let tab_title = gtk::Label::new(Some(&device_name));
 
                 let history_model = HistoryModel::builder();
@@ -161,54 +156,10 @@ impl Component for DeviceView {
 
                 //self.view.page(&history_widget).set_tab_expand
                 // Add to our managed pool
+            */
             },
             DeviceViewInput::RemoveDevice(device_name) => { },
             DeviceViewInput::ReorderDevice(device_name, from, to) => { }
         }
     }
-
-    //fn update(&mut self, message: Self::Input, sender: ComponentSender<Self>) {
-        /*
-    fn update(
-        &mut self,
-        message: Self::Input,
-        sender: ComponentSender<Self>,
-        root: &Self::Root
-    ) {
-        match message {
-            /*
-            DeviceViewInput::AddDevice(device_name) => {
-                // Add to the view
-                let tab_title = gtk::Label::new(Some(&device_name));
-
-                let history_model = HistoryModel::builder();
-                let history_widget = history_model.widget().to_owned();
-
-                let device = DeviceModel { name: device_name, history: vec![], history_widget };
-
-                //let history_model = HistoryModel::builder()
-                    //.launch(()).detach();
-                //let history_widget = history_model.widget();
-
-                //self.view.append_page(&history_widget, Some(&tab_title));
-
-                //self.view.append_page(&history_model, Some(&tab_title));
-
-                self.view.append_page(&device.history_widget, Some(&tab_title));
-
-                //self.view.page(&history_widget).set_tab_expand
-                // Add to our managed pool
-            },
-            */
-            DeviceViewInput::RemoveDevice(device_name) => {
-                //self.page.
-                // Remove from the view
-                // Remove from our managed pool
-            },
-            DeviceViewInput::ReorderDevice(device_name, from, to) => {
-            }
-            _ => {}
-        }
-    }
-    */
 }
