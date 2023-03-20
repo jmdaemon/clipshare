@@ -42,46 +42,44 @@ impl FactoryComponent for HistoryEntry {
     type Output = HistoryEntryOutput;
     type CommandOutput = ();
     type ParentInput = HistoryInput;
+    //type ParentWidget = gtk::Box;
     type ParentWidget = gtk::ListBox;
 
     view! {
         #[root]
-        gtk::ListBox {
-            set_selection_mode: gtk::SelectionMode::None,
-            gtk::Box {
-                set_orientation: gtk::Orientation::Horizontal,
-                set_spacing: 12,
-                set_hexpand: true,
-                    gtk::Label {
-                        #[watch]
-                        set_label: &self.index.to_string(),
-                        set_width_chars: 8,
-                        set_xalign: 0.6,
-                    },
-
-                    gtk::Label {
-                        set_css_classes: &["clipboard-entry"],
-                        set_can_target: true,
-
-                        #[watch]
-                        set_label: &self.last_copied,
-                        set_width_chars: 128,
-                        set_xalign: 0.00,
-                        //connect_cursor_notify[sender] => move |_| {
-                            //println!("Changed cursor");
-                            //gtk::Widget::set_cursor(&self, gdk::Cursor::);
-                            //gtk::Window::new().set_cursor(gtk::Widget::set_cursor(&self, cursor));
-                        //}
-                    },
-                gtk::Button {
-                    set_height_request: 24,
-                    set_label: "Copy"
+        gtk::Box {
+            set_orientation: gtk::Orientation::Horizontal,
+            set_spacing: 12,
+            set_hexpand: true,
+                gtk::Label {
+                    #[watch]
+                    set_label: &self.index.to_string(),
+                    set_width_chars: 8,
+                    set_xalign: 0.6,
                 },
-                gtk::Button {
-                    set_height_request: 24,
-                    set_label: "Delete"
+
+                gtk::Label {
+                    set_css_classes: &["clipboard-entry"],
+                    set_can_target: true,
+
+                    #[watch]
+                    set_label: &self.last_copied,
+                    set_width_chars: 128,
+                    set_xalign: 0.00,
+                    //connect_cursor_notify[sender] => move |_| {
+                        //println!("Changed cursor");
+                        //gtk::Widget::set_cursor(&self, gdk::Cursor::);
+                        //gtk::Window::new().set_cursor(gtk::Widget::set_cursor(&self, cursor));
+                    //}
                 },
-            }
+            gtk::Button {
+                set_height_request: 24,
+                set_label: "Copy"
+            },
+            gtk::Button {
+                set_height_request: 24,
+                set_label: "Delete"
+            },
         }
     }
 
@@ -137,8 +135,12 @@ impl SimpleComponent for HistoryModel {
     view! {
         #[root]
         gtk::ScrolledWindow {
-            #[local_ref]
-            history_box -> gtk::ListBox,
+            //#[name="lb_entries"]
+            gtk::ListBox {
+                #[local_ref]
+                //history_box -> gtk::Box,
+                history_box -> gtk::ListBox,
+            }
         }
     }
 
@@ -149,6 +151,7 @@ impl SimpleComponent for HistoryModel {
     ) -> ComponentParts<Self> {
 
         let mut history = FactoryVecDeque::new(gtk::ListBox::default(), sender.input_sender());
+        //let mut history = FactoryVecDeque::new(gtk::Box::default(), sender.input_sender());
 
         // Test out adding a few entries
         let clipboard = vec![
@@ -166,10 +169,30 @@ impl SimpleComponent for HistoryModel {
         });
 
         let model = HistoryModel { history };
+
+        //model.history.iter() {
+        //}
         let history_box = model.history.widget();
         relm4::set_global_css_from_file("src/gtk/widgets/history.css");
 
         let widgets = view_output!();
+
+        //let append_entry = |lb_entries: &gtk::ListBox| {
+            //for entry in model.history.iter() {
+                //lb_entries.append(&entry.init_root());
+                ////let a = entry.init_root();
+                ////lb_entries.append(entry);
+            //}
+            //lb_entries
+        //};
+
+        //lb_entries = append_entry(&lb_entries).to_owned();
+        //for entry in model.history.iter() {
+            //lb_entries.append(&entry.init_root());
+            ////let a = entry.init_root();
+            ////lb_entries.append(entry);
+        //}
+        
         ComponentParts { model, widgets }
     }
 
