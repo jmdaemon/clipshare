@@ -23,7 +23,7 @@ use relm4::{
 
 #[derive(Debug)]
 pub struct HistoryEntry {
-    pub index: usize,
+    pub index: DynamicIndex,
     pub last_copied: String,
 }
 
@@ -35,9 +35,13 @@ pub enum HistoryEntryOutput {}
 
 pub struct HistoryEntryInit {}
 
+//pub fn index(i: DynamicIndex) -> String {
+    //String::from(self.index.current_index() + 1)
+//}
+
 #[relm4::factory(pub)]
 impl FactoryComponent for HistoryEntry {
-    type Init = HistoryEntry;
+    type Init = String;
     type Input = HistoryEntryInput;
     type Output = HistoryEntryOutput;
     type CommandOutput = ();
@@ -53,7 +57,7 @@ impl FactoryComponent for HistoryEntry {
             set_hexpand: true,
                 gtk::Label {
                     #[watch]
-                    set_label: &self.index.to_string(),
+                    set_label: &(self.index.current_index() + 1).to_string(),
                     set_width_chars: 8,
                     set_xalign: 0.6,
                 },
@@ -88,14 +92,15 @@ impl FactoryComponent for HistoryEntry {
         index: &DynamicIndex,
         sender: FactorySender<Self>,
     ) -> Self {
-        //let a =gtk::Label::default();
-        //a.set_can_target(can_target)
-        init
+        Self {
+            last_copied: init,
+            index: index.to_owned()
+        }
     }
 
     fn init_widgets(
         &mut self,
-        _index: &DynamicIndex,
+        index: &DynamicIndex,
         root: &Self::Root,
         _returned_widget: &<Self::ParentWidget as FactoryView>::ReturnedWidget,
         sender: FactorySender<Self>,
@@ -161,12 +166,32 @@ impl SimpleComponent for HistoryModel {
             "Copied".to_owned(),
         ];
 
-        let mut index: usize = 1;
+        //let mut index: usize = 1;
+        //clipboard.into_iter().for_each(|line| {
+        //let history = clipboard.into_iter().for_each(|line| {
         clipboard.into_iter().for_each(|line| {
-            let entry = HistoryEntry { index, last_copied: line };
-            history.guard().push_front(entry);
-            index += 1;
+            //history.guard().push_front(line);
+            //history.guard().push_back(line);
+
+            /*
+            let len = history.len();
+            let last = history.get(len);
+            if let Some(last) = last {
+                history.guard().swap(len, 0);
+                //last.index.to_owned + 1;
+            }
+            */
+
+            let index = history.guard().push_back(line);
+            history.guard().move_front(index.current_index());
+
+            //let entry = HistoryEntry { index, last_copied: line };
+            //history.guard().push_front(entry);
+            //index += 1;
         });
+        //}).rev().collect();
+        //history.iter().rev()
+        //let history = history.iter().map(|entry: &HistoryEntry| entry.to_owned()).rev().collect();
 
         let model = HistoryModel { history };
 
