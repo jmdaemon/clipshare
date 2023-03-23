@@ -40,7 +40,7 @@ pub enum DeviceViewInput {
 }
 
 pub fn get_hostname() -> String {
-        hostname::get().expect("Could not get hostname").to_str().unwrap().to_string()
+    hostname::get().expect("Could not get hostname").to_str().unwrap().to_string()
 }
 
 pub fn create_device_tab_title(name: &str) -> gtk::Label {
@@ -106,13 +106,11 @@ impl Component for DeviceView {
         device_pool.push_back(device);
         device_pool.push_back(device2);
 
-        //remove_device(get_hostname(), root, &device_pool);
         reorder_device(get_hostname(), root, &device_pool, 1);
 
         let model = DeviceView { device_pool };
 
         let widgets = view_output!();
-
 
         ComponentParts { model, widgets }
     }
