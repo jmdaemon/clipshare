@@ -25,13 +25,12 @@ pretty_env_logger = "0.4"
 relm4 = { version = "0.5.0", optional=true}
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
-tokio = { version = "1", features = ["full"] }
 tokio-tungstenite = "*"
+tokio = { version = "1", features = ["full"] }
 tungstenite = { version = "0.18.0", features = ["rustls"] }
 url = "2.3.1"
 
 [features]
 default = ["gtk"]
 gtk = ["relm4"]
-#gtk = ["relm4", "relm4-macros"]
 #winui = ["native_windows_gui"]
