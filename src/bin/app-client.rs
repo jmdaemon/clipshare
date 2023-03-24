@@ -1,6 +1,8 @@
 use clipshare::{
-    clipshare::Client,
-    ws::AddressBuilder,
+    connect::{
+        client::Client,
+        socket::AddressBuilder,
+    }
 };
 
 #[tokio::main]

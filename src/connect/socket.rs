@@ -1,5 +1,6 @@
 // Common Imports
-use crate::device::Device;
+use crate::clipshare::device::{Dev, Device};
+
 use futures::{
     channel::mpsc::{unbounded, UnboundedSender},
     join,
@@ -66,7 +67,6 @@ pub struct AddressBuilder {
 // Types
 pub type Tx = UnboundedSender<Message>;
 pub type PeerMap = Arc<Mutex<HashMap<SocketAddr, Tx>>>;
-pub type Dev = Arc<Mutex<Device>>;
 
 // Address
 impl Default for Address {

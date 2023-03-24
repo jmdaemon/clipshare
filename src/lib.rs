@@ -1,10 +1,8 @@
 pub mod app;
 pub mod clipshare;
 pub mod config;
+pub mod connect;
 pub mod consts;
-pub mod device;
-pub mod discover;
-pub mod ws;
 // User Interfaces
 #[cfg(target_os = "linux")]
 #[cfg(feature = "gtk")]
