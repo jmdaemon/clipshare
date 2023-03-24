@@ -43,40 +43,15 @@ impl Client {
 
         // Find devices with the service
         let service_finder = ServiceFinder::new(SERVICE_TYPE);
-        let timeout = std::time::Duration::from_secs(30);
+        let timeout = std::time::Duration::from_secs(10);
         let found = service_finder.find_devices(timeout).await;
 
-        // Yield all the addresses
-        //let addresses: Vec<Ipv4Addr> = found.into_iter().map(|info| {
-        //info.get_addresses().into_iter()
-            //.map(|addr| addr.to_owned())
-            //.collect::<Vec<Ipv4Addr>>()
-        //}).flatten().collect();
-        //addresses
-
+        // Parse and return just their addresses
         found.into_iter().flat_map(|info| {
             info.get_addresses().iter()
                 .map(|addr| addr.to_owned())
                 .collect::<Vec<Ipv4Addr>>()
         }).collect()
-
-
-        //}).fold(vec![], |acc, addresses| acc.push(addresses));
-        //addresses
-        //let mut first_address = Ipv4Addr::UNSPECIFIED;
-
-        //while let Ok(event) = service_finder.receiver.recv_async().await {
-            //if let Some(service_info) = handle_new_client(&event) { 
-                //let addresses = service_info.get_addresses();
-                //addresses.iter().for_each(|address| {
-                    //device_addr = address.to_owned();
-                //});
-                //if device_addr != Ipv4Addr::UNSPECIFIED {
-                    //break;
-                //}
-            //}
-        //}
-        //device_addr
     }
 
     /// Establishes the websocket connection to the device at address
