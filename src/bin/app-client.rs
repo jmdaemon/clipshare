@@ -1,7 +1,7 @@
 use clipshare::{
     connect::{
         client::Client,
-        socket::AddressBuilder,
+        address::AddressBuilder,
     }
 };
 

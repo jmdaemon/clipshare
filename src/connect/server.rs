@@ -1,7 +1,8 @@
 use crate::{
     connect::{
+        address::{Address, AddressBuilder},
         discover::{Device, SERVICE_TYPE},
-        socket::{Address, AddressBuilder, PeerMap, poll_client_connections, setup_server}
+        socket::{PeerMap, poll_client_connections, setup_server},
     },
     clipshare::{
         device::{Dev, init_device},
