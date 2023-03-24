@@ -3,12 +3,7 @@ pub mod clipshare;
 pub mod config;
 pub mod connect;
 pub mod consts;
-// User Interfaces
-#[cfg(target_os = "linux")]
-#[cfg(feature = "gtk")]
-pub mod gtk;
-#[cfg(target_os = "windows")]
-pub mod winui;
+pub mod ui;
 
 // Use all the log macros automatically
 #[macro_use] extern crate log;

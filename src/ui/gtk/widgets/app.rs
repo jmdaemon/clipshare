@@ -1,4 +1,4 @@
-use crate::gtk::widgets::{
+use crate::ui::gtk::widgets::{
     history::HistoryModel,
     configure_dialog::{ConfigureDialog, ConfigureDialogInput},
     device_view::DeviceView,
