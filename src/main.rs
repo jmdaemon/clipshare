@@ -1,6 +1,8 @@
 use clipshare::{
-    device::{Device, init_device},
-    config::Settings,
+    clipshare::{
+        device::{Device, init_device},
+        settings::Settings,
+    },
 };
 #[macro_use] extern crate log;
 

@@ -1,4 +1,4 @@
-use clipshare::discover::{Device, SERVICE_TYPE};
+use clipshare::connect::discover::{Device, SERVICE_TYPE};
 
 #[tokio::main]
 pub async fn main() {

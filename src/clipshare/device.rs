@@ -1,7 +1,12 @@
 use crate::lines_from_file;
 use clipboard::{ClipboardContext, ClipboardProvider};
 
-use std::path::Path;
+use std::{
+    sync::{Arc, Mutex},
+    path::Path,
+};
+
+pub type Dev = Arc<Mutex<Device>>;
 
 pub struct Device {
     pub name: String,
@@ -19,30 +24,18 @@ pub struct Device {
     //}
 //}
 
-// Clipboard
-pub fn get_clipboard_conts(ctx: &mut ClipboardContext) -> String {
-    ctx.get_contents().unwrap()
-}
-
-pub fn set_clipboard_conts(ctx: &mut ClipboardContext, conts: String) {
-    ctx.set_contents(conts).expect("Could not set contents of clipboard");
-}
-
 impl Device {
     pub fn new(name: String, history: Vec<String>, clipboard: ClipboardContext) -> Device {
         Device { name, history, clipboard }
     }
 
     pub fn get_clipboard_conts(&mut self) -> String {
-        get_clipboard_conts(&mut self.clipboard)
+        self.clipboard.get_contents().unwrap()
     }
 
     pub fn set_clipboard_conts(&mut self, conts: String) {
-        set_clipboard_conts(&mut self.clipboard, conts)
+        self.clipboard.set_contents(conts).expect("Could not set contents of clipboard");
     }
-
-    //pub fn history_from_file(&mut self, path: &Path) -> Device {
-    //}
 }
 
 #[derive(Default)]
@@ -52,7 +45,10 @@ pub struct DeviceBuilder {
 }
 
 impl DeviceBuilder {
-    pub fn new() -> Self { Default::default() }
+    pub fn new() -> Self {
+        Default::default()
+    }
+
     pub fn build(&self) -> Device {
         let clipboard: ClipboardContext = ClipboardProvider::new().unwrap();
         Device { name: self.name.to_owned().unwrap(), history: self.history.to_owned().unwrap(), clipboard }
