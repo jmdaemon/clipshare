@@ -1,4 +1,4 @@
-use clipshare::connect::discover::{Device, SERVICE_TYPE};
+use clipshare::connect::discover::{ServiceProvider, SERVICE_TYPE};
 
 #[tokio::main]
 pub async fn main() {
@@ -9,6 +9,6 @@ pub async fn main() {
     let port = 5200;
     let properties = [("property_1", "test"), ("property_2", "1234")];
     
-    let device = Device::new(service_type, instance_name, host_ipv4, host_name, port, &properties[..]);
+    let device = ServiceProvider::new(service_type, instance_name, host_ipv4, host_name, port, &properties[..]);
     device.register_device().await;
 }

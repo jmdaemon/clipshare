@@ -6,24 +6,24 @@ use mdns_sd::{ServiceEvent, ServiceInfo, ServiceDaemon, Receiver};
 
 pub const SERVICE_TYPE: &str = "_clipshare._udp.local.";
 
-pub struct DeviceMonitor {
+pub struct ServiceFinder {
     pub mdns: ServiceDaemon,
     pub receiver: Receiver<ServiceEvent>,
 }
 
-pub struct Device {
+pub struct ServiceProvider {
     pub mdns: ServiceDaemon,
     pub service_info: Option<ServiceInfo>,
 }
 
-impl DeviceMonitor {
-    pub fn new(service_type: &str) -> DeviceMonitor {
+impl ServiceFinder {
+    pub fn new(service_type: &str) -> ServiceFinder {
         // Create a daemon
         let mdns = ServiceDaemon::new().expect("Failed to create daemon");
         
         // Browse for a service type.
         let receiver: Receiver<ServiceEvent> = mdns.browse(service_type).expect("Failed to browse");
-        DeviceMonitor { mdns, receiver }
+        ServiceFinder { mdns, receiver }
     }
 
     pub async fn monitor_devices(&self) {
@@ -36,12 +36,15 @@ impl DeviceMonitor {
 pub fn handle_new_client(event: &ServiceEvent) -> Option<ServiceInfo> {
     match event {
         ServiceEvent::ServiceResolved(info) => {
-
             println!("Resolved a new service: {}", info.get_fullname());
+
+            // Show addresses
             let addresses = info.get_addresses();
             addresses.iter().for_each(|addr| {
                 println!("Address Found: {}", addr);
             });
+
+            // Show address properties
             info.get_properties().iter().for_each(|p| {
                 println!("Property Name {}: Property Value {}", p.key(), p.val());
             });
@@ -49,6 +52,8 @@ pub fn handle_new_client(event: &ServiceEvent) -> Option<ServiceInfo> {
             // TODO: Tell the device to stop sending connection messages
             //addresses.iter().for_each(|addr| {
             //});
+
+            // Return the ServiceInfo file
             Some(info.to_owned())
         }
         other_event => {
@@ -58,7 +63,7 @@ pub fn handle_new_client(event: &ServiceEvent) -> Option<ServiceInfo> {
     }
 }
 
-impl Device {
+impl ServiceProvider {
     pub fn new(
         service_type: &str,
         instance_name: &str,
@@ -66,7 +71,7 @@ impl Device {
         host_name: &str,
         port: u16,
         properties: &[(&str,&str)]
-    ) -> Device {
+    ) -> ServiceProvider {
 
         // Create a daemon
         let mdns = ServiceDaemon::new().expect("Failed to create daemon");
@@ -80,7 +85,7 @@ impl Device {
             port,
             properties,
         ).unwrap();
-        Device { mdns, service_info: Some(service_info) }
+        ServiceProvider { mdns, service_info: Some(service_info) }
     }
 
     pub async fn register_device(&self) {

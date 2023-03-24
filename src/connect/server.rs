@@ -1,7 +1,7 @@
 use crate::{
     connect::{
         address::{Address, AddressBuilder},
-        discover::{Device, SERVICE_TYPE},
+        discover::{ServiceProvider, SERVICE_TYPE},
         socket::{PeerMap, poll_client_connections, setup_server},
     },
     clipshare::{
@@ -44,7 +44,7 @@ async fn register_device(address: Arc<Address>) {
     let port = address.port as u16; // FIXME: Make sure to change port data type
     let properties = [("property_1", "test"), ("property_2", "1234")];
     
-    let device = Device::new(service_type, instance_name, host_ipv4, &host_name, port, &properties[..]);
+    let device = ServiceProvider::new(service_type, instance_name, host_ipv4, &host_name, port, &properties[..]);
     if let Some(service) = &device.service_info {
         // TODO: Run forever for now, we'll kill this later somehow,
         // when we drop the connection.

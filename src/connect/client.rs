@@ -5,7 +5,7 @@ use crate::{
     },
     connect::{
         address::{Address, AddressBuilder},
-        discover::{DeviceMonitor, handle_new_client, SERVICE_TYPE},
+        discover::{ServiceFinder, handle_new_client, SERVICE_TYPE},
         socket::setup_client,
     },
 };
@@ -40,7 +40,7 @@ impl Client {
     /// available device. In the future, this should use an address pool, and a separate channel
     /// to manage addition/removal of devices
     pub async fn monitor_devices(&self) -> Ipv4Addr {
-        let device_monitor = DeviceMonitor::new(SERVICE_TYPE);
+        let device_monitor = ServiceFinder::new(SERVICE_TYPE);
         let mut device_addr = Ipv4Addr::UNSPECIFIED;
         while let Ok(event) = device_monitor.receiver.recv_async().await {
             if let Some(service_info) = handle_new_client(&event) { 
