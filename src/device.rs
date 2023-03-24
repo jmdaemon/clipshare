@@ -63,10 +63,7 @@ impl DeviceBuilder {
         self
     }
 
-    pub fn read_history_from_file<P>(mut self, path: P) -> DeviceBuilder
-    where
-        P: AsRef<Path>,
-    {
+    pub fn read_history_from_file(mut self, path: impl AsRef<Path>) -> DeviceBuilder {
         let conts = lines_from_file(path).expect("Could not read lines from file.");
         let history: Vec<String> = conts.map(|line| line.unwrap()).collect();
         self.history = Some(history);
