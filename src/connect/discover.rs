@@ -3,6 +3,7 @@ use std::{
     thread::sleep,
 };
 use mdns_sd::{ServiceEvent, ServiceInfo, ServiceDaemon, Receiver};
+use tokio::time::timeout;
 
 pub const SERVICE_TYPE: &str = "_clipshare._udp.local.";
 
@@ -16,24 +17,7 @@ pub struct ServiceProvider {
     pub service_info: Option<ServiceInfo>,
 }
 
-impl ServiceFinder {
-    pub fn new(service_type: &str) -> ServiceFinder {
-        // Create a daemon
-        let mdns = ServiceDaemon::new().expect("Failed to create daemon");
-        
-        // Browse for a service type.
-        let receiver: Receiver<ServiceEvent> = mdns.browse(service_type).expect("Failed to browse");
-        ServiceFinder { mdns, receiver }
-    }
-
-    pub async fn monitor_devices(&self) {
-        while let Ok(event) = self.receiver.recv_async().await {
-            handle_new_client(&event);
-        }
-    }
-}
-
-pub fn handle_new_client(event: &ServiceEvent) -> Option<ServiceInfo> {
+fn get_service_info(event: &ServiceEvent) -> Option<ServiceInfo> {
     match event {
         ServiceEvent::ServiceResolved(info) => {
             println!("Resolved a new service: {}", info.get_fullname());
@@ -49,10 +33,6 @@ pub fn handle_new_client(event: &ServiceEvent) -> Option<ServiceInfo> {
                 println!("Property Name {}: Property Value {}", p.key(), p.val());
             });
 
-            // TODO: Tell the device to stop sending connection messages
-            //addresses.iter().for_each(|addr| {
-            //});
-
             // Return the ServiceInfo file
             Some(info.to_owned())
         }
@@ -61,6 +41,50 @@ pub fn handle_new_client(event: &ServiceEvent) -> Option<ServiceInfo> {
             None
         }
     }
+}
+
+impl ServiceFinder {
+    pub fn new(service_type: &str) -> ServiceFinder {
+        // Create a daemon
+        let mdns = ServiceDaemon::new().expect("Failed to create daemon");
+        
+        // Browse for a service type.
+        let receiver: Receiver<ServiceEvent> = mdns.browse(service_type).expect("Failed to browse");
+        ServiceFinder { mdns, receiver }
+    }
+
+    /// Finds all the devices running the service
+    /// Timeouts after a given duration
+    pub async fn find_devices(&self, time: Duration) -> Vec<ServiceInfo> {
+        let mut devices = vec![];
+        while let Ok(received) = timeout(time, self.receiver.recv_async()).await {
+            if let Ok(event) = received {
+                if let Some(info) = get_service_info(&event) {
+                    devices.push(info);
+                }
+            }
+        }
+        devices
+    }
+}
+
+pub fn server_create_service() -> Result<ServiceInfo, mdns_sd::Error> {
+    // Create a service info.
+    let service_type = SERVICE_TYPE;
+    let instance_name = "my_instance";
+    let host_ipv4 = "192.168.1.12";
+    let host_name = "192.168.1.12.local.";
+    let port = 5200;
+    let properties = [("property_1", "test"), ("property_2", "1234")];
+
+    ServiceInfo::new(
+        service_type,
+        instance_name,
+        host_name,
+        host_ipv4,
+        port,
+        &properties[..],
+    )
 }
 
 impl ServiceProvider {
@@ -99,23 +123,4 @@ impl ServiceProvider {
             }
         }
     }
-}
-
-pub fn server_create_service() -> Result<ServiceInfo, mdns_sd::Error> {
-    // Create a service info.
-    let service_type = SERVICE_TYPE;
-    let instance_name = "my_instance";
-    let host_ipv4 = "192.168.1.12";
-    let host_name = "192.168.1.12.local.";
-    let port = 5200;
-    let properties = [("property_1", "test"), ("property_2", "1234")];
-
-    ServiceInfo::new(
-        service_type,
-        instance_name,
-        host_name,
-        host_ipv4,
-        port,
-        &properties[..],
-    )
 }

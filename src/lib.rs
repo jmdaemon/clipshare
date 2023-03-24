@@ -1,3 +1,4 @@
+#![feature(async_closure)]
 pub mod app;
 pub mod clipshare;
 pub mod config;
