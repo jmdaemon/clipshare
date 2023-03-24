@@ -4,8 +4,9 @@ use crate::{
         device::{Dev, init_device},
     },
     connect::{
+        address::{Address, AddressBuilder},
         discover::{DeviceMonitor, handle_new_client, SERVICE_TYPE},
-        socket::{Address, setup_client, AddressBuilder},
+        socket::setup_client,
     },
 };
 
