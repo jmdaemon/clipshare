@@ -1,22 +1,18 @@
 use std::{
     fmt,
-    collections::HashMap,
-    net::{SocketAddr, Ipv4Addr},
-    sync::{Arc, Mutex},
-    str::FromStr,
+    net::Ipv4Addr,
     num::ParseIntError,
+    str::FromStr,
 };
 
+use derive_builder::Builder;
+
 /// Stores device ip address and port
+#[derive(Builder)]
+#[builder(default)]
 pub struct Address {
     pub ip: String,
     pub port: u32,
-}
-
-/// Stores device address defaults
-#[derive(Default)]
-pub struct AddressBuilder {
-    pub address: Address,
 }
 
 impl Default for Address {
@@ -47,26 +43,5 @@ impl FromStr for Address {
 impl Address {
     pub fn new(ip: String, port: u32) -> Self {
         Self { ip, port }
-    }
-}
-
-// AddressBuilder
-impl AddressBuilder {
-    pub fn new() -> Self {
-        Default::default()
-    }
-
-    pub fn build(self) -> Address {
-        self.address
-    }
-
-    pub fn ip(mut self, ip: String) -> Self {
-        self.address.ip = ip;
-        self
-    }
-
-    pub fn port(mut self, port: u32) -> Self {
-        self.address.port = port;
-        self
     }
 }
