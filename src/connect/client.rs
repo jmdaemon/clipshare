@@ -26,7 +26,7 @@ impl Default for Client {
     fn default() -> Self {
         let settings = SettingsBuilder::new().build();
         let device = Arc::new(Mutex::new(init_device()));
-        let address = AddressBuilder::new().build();
+        let address = AddressBuilder::default().build().expect("Could not create AddressBuilder");
         Self { settings, device, address }
     }
 }

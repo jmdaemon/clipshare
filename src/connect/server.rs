@@ -67,9 +67,9 @@ impl Default for Server {
         let settings = SettingsBuilder::new().build();
         let device = Arc::new(Mutex::new(init_device()));
         let address = Arc::new(
-            AddressBuilder::new()
+            AddressBuilder::default()
             .ip(local_ip().unwrap().to_string())
-            .build());
+            .build().expect("Could not create AddressBuilder"));
         Self { settings, device, address }
     }
 }
