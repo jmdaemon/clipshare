@@ -169,17 +169,33 @@ impl ClientPool {
         //parse_addresses();
 
         let serv_info = service_finder.find_device(timeout).await;
+        let serv_info_copy = serv_info.as_ref().unwrap().clone();
+
         let addresses = parse_address(serv_info.unwrap());
         
+
+        //let hostname = serv_info.as_ref().unwrap().get_property_val("hostname").to_owned();
+        //let hostname = serv_info.clone().unwrap().get_property_val("hostname");
+        let hostname = serv_info_copy.get_property_val("hostname").unwrap().to_owned();
+
         let clients: Vec<Client> = addresses.iter().map(|address| {
             let mut client = Client::new();
+
+            // Set client address
             let address = AddressBuilder::default()
                 .ip(address.to_string())
                 .build()
                 .unwrap();
+
             //let address = AddressBuilder::ip(address.to_string()).build();
             //let address = Address::from(address.to_string().as_str());
             client.address = address;
+
+            // Set client hostname
+            let device = client.device.clone();
+            device.lock().unwrap().name = hostname.clone();
+            client.device = device;
+
             client
         }).collect();
 
