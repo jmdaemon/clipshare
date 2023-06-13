@@ -1,8 +1,8 @@
-use crate::ui::gtk::widgets::{
+use crate::{ui::gtk::widgets::{
     history::HistoryModel,
     configure_dialog::{ConfigureDialog, ConfigureDialogInput},
     device_view::DeviceView,
-};
+}, connect::client::ClientPool};
 
 use gtk::prelude::{
     BoxExt,
@@ -24,8 +24,8 @@ use relm4::{
     SimpleComponent,
 };
 
-#[derive(Debug)]
 pub struct App {
+    clients: ClientPool,
     history: Controller<HistoryModel>,
     device_dialog: Controller<ConfigureDialog>,
     device_view: Controller<DeviceView>
@@ -130,6 +130,11 @@ impl SimpleComponent for App {
         sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
 
+        // Load all the clients up on startup
+        let clients = ClientPool::new();
+        //let clients = tokio::task::spawn_blocking(async move { clients.populate() });
+        let clients = futures::executor::block_on(clients.populate());
+
         let history = HistoryModel::builder()
             .launch(()).detach();
             //.launch(()).forward(sender.input_sender(), |msg| ());
@@ -142,7 +147,7 @@ impl SimpleComponent for App {
             //});
 
         let device_view = DeviceView::builder().launch(()).detach();
-        let model = App { history, device_dialog, device_view };
+        let model = App { clients, history, device_dialog, device_view };
 
         let history_widget = model.history.widget();
         model.device_dialog.widget().set_transient_for(Some(root));

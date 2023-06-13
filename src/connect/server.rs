@@ -42,7 +42,9 @@ async fn register_device(address: Arc<Address>) {
     let host_ipv4 = addr;
     let host_name = format!("{}.local.", host_ipv4);
     let port = address.port as u16; // FIXME: Make sure to change port data type
-    let properties = [("property_1", "test"), ("property_2", "1234")];
+    //let properties = [("property_1", "test"), ("property_2", "1234")];
+    let device_name = hostname::get().unwrap();
+    let properties = [("hostname", device_name.to_str().unwrap()), ("property_2", "1234")];
     
     let device = ServiceProvider::new(service_type, instance_name, host_ipv4, &host_name, port, &properties[..]);
     if let Some(service) = &device.service_info {
