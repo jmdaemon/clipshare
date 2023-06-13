@@ -5,5 +5,5 @@ use std::time::Duration;
 pub async fn main() {
     let device_monitor = ServiceFinder::new(SERVICE_TYPE);
     let timeout = Duration::from_secs(30);
-    device_monitor.find_devices(timeout).await;
+    device_monitor.find_device(timeout).await;
 }
