@@ -1,11 +1,17 @@
 use std::{
+    sync::{Arc, Mutex},
     time::Duration,
     thread::sleep,
 };
 use mdns_sd::{ServiceEvent, ServiceInfo, ServiceDaemon, Receiver};
 use tokio::time::timeout;
 
+/*
+ * These are temporary strutures to discover devices via mdns-sd
+ */
+
 pub const SERVICE_TYPE: &str = "_clipshare._udp.local.";
+pub type DeviceInfoPool = Arc<Mutex<Vec<ServiceInfo>>>;
 
 pub struct ServiceFinder {
     pub mdns: ServiceDaemon,
@@ -53,19 +59,44 @@ impl ServiceFinder {
         ServiceFinder { mdns, receiver }
     }
 
-    /// Finds all the devices running the service
+    async fn recv_timeout(&self, time: Duration) -> Option<ServiceInfo> {
+        while let Ok(received) = timeout(time, self.receiver.recv_async()).await {
+            if let Ok(event) = received {
+                if let Some(info) = get_service_info(&event) {
+                    return Some(info);
+                }
+            }
+        }
+        None
+    }
+
+    /// Finds the first the device running the service
     /// Timeouts after a given duration
-    pub async fn find_devices(&self, time: Duration) -> Vec<ServiceInfo> {
+    pub async fn find_device(&self, time: Duration) -> Option<ServiceInfo> {
+        self.recv_timeout(time).await
+    }
+
+    /*
+    /// Asynchronously finds all the devices running the service
+    /// Any devices found will be added to the DeviceInfoPool
+    /// Automatically timeouts after a given duration
+    pub async fn find_devices(&self, time: Duration, device_info_pool: DeviceInfoPool) {
+        /*
         let mut devices = vec![];
         while let Ok(received) = timeout(time, self.receiver.recv_async()).await {
             if let Ok(event) = received {
                 if let Some(info) = get_service_info(&event) {
-                    devices.push(info);
+                    device_info_pool.lock().expect("Unable to lock device_info_pool").push(info);
                 }
             }
         }
-        devices
     }
+        */
+        while let Some(info) = self.recv_timeout(time).await {
+            device_info_pool.lock().expect("Unable to lock device_info_pool").push(info);
+        }
+    }
+*/
 }
 
 pub fn server_create_service() -> Result<ServiceInfo, mdns_sd::Error> {
@@ -88,6 +119,7 @@ pub fn server_create_service() -> Result<ServiceInfo, mdns_sd::Error> {
 }
 
 impl ServiceProvider {
+
     pub fn new(
         service_type: &str,
         instance_name: &str,
