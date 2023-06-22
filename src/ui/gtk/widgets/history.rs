@@ -32,7 +32,7 @@ impl HistoryPanelActions for HistoryPanel {
 }
 
 // Test out adding a few entries
-fn populate_history(mut history: HistoryEntries) {
+fn populate_history(mut history: HistoryEntries) -> HistoryEntries {
     let clipboard = vec![
         "This".to_owned(),
         "Will".to_owned(),
@@ -47,6 +47,7 @@ fn populate_history(mut history: HistoryEntries) {
         */
         let index = history.guard().push_back(line);
     });
+    history
 }
 
 impl Component for HistoryViewModel {
@@ -68,13 +69,14 @@ impl Component for HistoryViewModel {
     ) -> ComponentParts<Self> {
         
         // Create model
-        let mut history = FactoryVecDeque::new(gtk::ListBox::default(), sender.input_sender());
+        let history = FactoryVecDeque::new(gtk::ListBox::default(), sender.input_sender());
+        let history = populate_history(history);
+        // Test history
         let model = HistoryViewModel { history };
 
         // Set CSS
         // TODO: Create separate css file with global styles
         relm4::set_global_css_from_file("src/gtk/widgets/history.css");
-        populate_history(history);
 
         // Create widgets
         let history_window = HistoryPanel(root.to_owned());
