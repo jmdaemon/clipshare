@@ -7,15 +7,17 @@ use relm4::{
     gtk,
     ComponentSender,
     ComponentParts,
-    Component,
+    Component, Controller,
 };
 
 // Types
 pub type DeviceViews = VecDeque<DeviceViewModel>;
+pub type DeviceViewControllers = VecDeque<Controller<DeviceViewModel>>;
 
 #[derive(Debug)]
 pub struct DevicePanelModel {
     pub device_views: DeviceViews,
+    pub device_views_controllers: DeviceViewControllers,
 }
 
 #[derive(Debug)]
@@ -36,7 +38,7 @@ pub enum DevicePanelAction {
 // We create a newtype struct around GtkNotebook in order to more easily manage devices
 pub trait DeviceNotebookActions {
     fn inner(&self) -> &gtk::Notebook;
-    fn add_device(&self, name: &str);
+    fn add_device(&self, name: &str, controllers: &mut DeviceViewControllers);
     fn remove_device(&self, name: String, device_views: &DeviceViews);
     fn reorder_device(&self, name: String, device_views: &DeviceViews, from: u32, to: u32);
 }
@@ -44,13 +46,15 @@ pub trait DeviceNotebookActions {
 impl DeviceNotebookActions for DeviceNotebook {
     fn inner(&self) -> &gtk::Notebook { self.0.as_ref() }
 
-    fn add_device(&self, name: &str) {
-        let tab_title = create_label(&name);
+    fn add_device(&self, name: &str, controllers: &mut DeviceViewControllers) {
+        let tab_title = create_label(name);
         //let device = create_device(name);
         //let device = DeviceViewModel::new(name);
         let device_builder = DeviceViewModel::builder();
         let device_widget = device_builder.widget();
         self.inner().append_page(device_widget, Some(&tab_title));
+        let controller = device_builder.launch(name.to_owned()).detach();
+        controllers.push_back(controller);
         //let a = device_builder.launch(()).detach();
     }
 
@@ -108,17 +112,20 @@ impl Component for DevicePanelModel {
         sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
         let device_views = VecDeque::new();
+        let mut device_views_controllers = VecDeque::new();
         let device_notebook = DeviceNotebook(root.to_owned());
         // Add the device views here
+        println!("Constructing DevicePanel");
         let clients = init.clients.lock().unwrap();
         clients.iter().for_each(|client| {
+            println!("Creating device");
             let client_unlock = client.device.lock().unwrap();
             let name = client_unlock.name.as_ref();
-            device_notebook.add_device(name);
+            device_notebook.add_device(name, &mut device_views_controllers);
         });
 
         // Create model
-        let model = DevicePanelModel { device_views };
+        let model = DevicePanelModel { device_views, device_views_controllers };
         let widgets = DevicePanelWidgets { device_notebook };
 
         ComponentParts { model, widgets }
@@ -134,7 +141,7 @@ impl Component for DevicePanelModel {
         let device_notebook = &widgets.device_notebook;
         match message {
             DevicePanelAction::AddDevice(device_name) => {
-                device_notebook.add_device(&device_name);
+                device_notebook.add_device(&device_name, &mut self.device_views_controllers);
                 //self.device_views.push_back(device);
             },
             DevicePanelAction::RemoveDevice(device_name) => {
