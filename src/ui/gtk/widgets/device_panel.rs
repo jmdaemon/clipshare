@@ -1,21 +1,14 @@
-use super::{history::HistoryModel, device_view::{DeviceView, DeviceModel}};
-use std::collections::VecDeque;
-use gtk::prelude::{
-    BoxExt,
-    ButtonExt,
-    OrientableExt,
-    WidgetExt,
+use super::{
+    history::HistoryModel,
+    device_view::DeviceModel
 };
+use std::collections::VecDeque;
+use gtk::prelude::WidgetExt;
 use relm4::{
     gtk,
-    SimpleComponent,
     ComponentSender,
     ComponentParts,
-    prelude::DynamicIndex,
-    WidgetRef,
-    RelmWidgetExt,
-    Controller,
-    Component, ComponentBuilder,
+    Component,
 };
 
 // Types
@@ -41,42 +34,7 @@ pub enum DevicePanelAction {
     ReorderDevice(String, u32),
 }
 
-// Functions
-pub fn create_device_tab_title(name: &str) -> gtk::Label {
-    gtk::Label::new(Some(name))
-}
-
-pub fn create_device(name: String) -> DeviceModel {
-    let history_builder = HistoryModel::builder();
-    let history_widget = history_builder.widget().to_owned();
-    let history = history_builder.launch(()).detach();
-    DeviceModel { name, history_widget, history }
-}
-
-//pub fn add_device(name: String, root: &gtk::Notebook) -> DeviceModel {
-    //let tab_title = create_device_tab_title(&name);
-    //let device = create_device(name);
-
-    //root.append_page(&device.history_widget, Some(&tab_title));
-    //device
-//}
-
-//pub fn remove_device(name: String, root: &gtk::Notebook, device_pool: &DevicePool) {
-    //for (index, dev) in device_pool.iter().enumerate() {
-        //if dev.name == name {
-            //root.remove_page(Some(index as u32));
-        //}
-    //}
-//}
-
-//pub fn reorder_device(name: String, root: &gtk::Notebook, device_pool: &DevicePool, to: u32) {
-    //for dev in device_pool.iter() {
-        //if dev.name == name {
-            //root.reorder_child(&dev.history_widget, Some(to));
-        //}
-    //}
-//}
-
+// We create a newtype struct around GtkNotebook in order to more easily manage devices
 pub trait DeviceNotebookActions {
     fn inner(&self) -> &gtk::Notebook;
     fn add_device(&self, name: String);
@@ -110,8 +68,19 @@ impl DeviceNotebookActions for DeviceNotebook {
     }
 }
 
+// Functions
+pub fn create_device_tab_title(name: &str) -> gtk::Label {
+    gtk::Label::new(Some(name))
+}
+
+pub fn create_device(name: String) -> DeviceModel {
+    let history_builder = HistoryModel::builder();
+    let history_widget = history_builder.widget().to_owned();
+    let history = history_builder.launch(()).detach();
+    DeviceModel { name, history_widget, history }
+}
+
 // Component
-//#[relm4::component(pub)]
 impl Component for DevicePanelModel {
     type Input = DevicePanelAction;
     type Output = ();
@@ -120,19 +89,8 @@ impl Component for DevicePanelModel {
     type Root = gtk::Notebook;
     type CommandOutput = ();
 
-    //view! {
-        //#[local_ref]
-        //device_notebook.inner() -> gtk::Notebook {
-        //}
-
-        //#[root]
-        //gtk::Notebook {
-              //set_hexpand: true,
-              //set_vexpand: true,
-        //}
-    //}
-
     fn init_root() -> Self::Root {
+        // Create GtkNotebook
         let notebook = gtk::Notebook::new();
         notebook.set_hexpand(true);
         notebook.set_vexpand(true);
@@ -145,12 +103,6 @@ impl Component for DevicePanelModel {
         sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
         let device_views = VecDeque::new();
-        // Create GtkNotebook
-        //let notebook = gtk::Notebook::new();
-        //notebook.set_hexpand(true);
-        //notebook.set_vexpand(true);
-
-        //let device_notebook = DeviceNotebook(notebook);
         let device_notebook = DeviceNotebook(root.to_owned());
 
         // Create model
@@ -160,31 +112,6 @@ impl Component for DevicePanelModel {
         ComponentParts { model, widgets }
     }
 
-    //fn update(
-        //&mut self,
-        //message: Self::Input,
-        //sender: ComponentSender<Self>,
-    //) {
-        //match message {
-            //DevicePanelAction::AddDevice(device_name) => {
-                //// TODO: Device should be an already constructed object here
-                //// TODO: This doesn't seem to actually add another
-                ////let device = add_device(device_name, root);
-                ////let device = add_device(device_name, root);
-                ////(*self).add_device(device_name, root);
-                ////let device = add_device(device_name, root);
-                //root.add_device(device_name);
-                //self.device_views.push_back(device);
-            //},
-            //DevicePanelAction::RemoveDevice(device_name) => {
-                //remove_device(device_name, root, &self.device_pool);
-            //},
-            //DevicePanelAction::ReorderDevice(device_name, to) => {
-                //reorder_device(device_name, root, &self.device_pool, to);
-            //}
-        //}
-    //}
-    
     fn update_with_view(
         &mut self,
         widgets: &mut Self::Widgets,
@@ -195,22 +122,13 @@ impl Component for DevicePanelModel {
         let device_notebook = &widgets.device_notebook;
         match message {
             DevicePanelAction::AddDevice(device_name) => {
-                // TODO: Device should be an already constructed object here
-                // TODO: This doesn't seem to actually add another
-                //let device = add_device(device_name, root);
-                //let device = add_device(device_name, root);
-                //(*self).add_device(device_name, root);
-                //let device = add_device(device_name, root);
-                //root.add_device(device_name);
-                //self.device_views.push_back(device);
                 device_notebook.add_device(device_name);
+                //self.device_views.push_back(device);
             },
             DevicePanelAction::RemoveDevice(device_name) => {
-                //root.remove_device(device_name, root, &self.device_views);
                 device_notebook.remove_device(device_name, &self.device_views);
             },
             DevicePanelAction::ReorderDevice(device_name, to) => {
-                //reorder_device(device_name, root, &self.device_views, to);
                 device_notebook.reorder_device(device_name, &self.device_views, to);
             }
         }
