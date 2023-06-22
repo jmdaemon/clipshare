@@ -1,6 +1,6 @@
 use super::history::HistoryViewModel;
 use relm4::{
-    gtk::{self, prelude::FileExt, traits::{FrameExt, WidgetExt, BoxExt}},
+    gtk::{self, traits::BoxExt},
     ComponentSender,
     ComponentParts,
     Controller,
@@ -22,18 +22,6 @@ pub fn create_label(name: &str) -> gtk::Label {
     gtk::Label::new(Some(name))
 }
 
-// TODO: Since the HistoryModel is difficult to work with, this will have to do for now
-// Later on we'll replace this with a proper DeviceViewModel constructor
-impl DeviceViewModel {
-    pub fn new(name: String) -> Self {
-        let history_builder = HistoryViewModel::builder();
-        //let history_widget = history_builder.widget().to_owned();
-        let history = history_builder.launch(()).detach();
-        Self { name, history }
-    }
-}
-
-//#[relm4::component(pub)]
 impl Component for DeviceViewModel {
     type Input = ();
     type Output = ();
@@ -49,8 +37,6 @@ impl Component for DeviceViewModel {
             .hexpand(true)
             .vexpand(true)
             .build()
-        //let gtkbox = gtk::Box::new(gtk::Orientation::Vertical, 6);
-        //gtkbox
     }
 
     fn init(
@@ -60,24 +46,15 @@ impl Component for DeviceViewModel {
     ) -> ComponentParts<Self> {
 
         println!("Constructing DeviceView");
-        // TODO: Use the builder directly to attach the object to the screen?
         let history_builder = HistoryViewModel::builder();
-        //let history_builder = HistoryViewModel::builder();
-        //let history_widget = history_builder.widget().to_owned();
         let history_widget = history_builder.widget().to_owned();
         let history = history_builder.launch(()).detach();
 
         let model = DeviceViewModel { name: init, history };
         let widgets = DeviceViewWidgets { history_widget };
 
-        //widgets.history_widget.set_parent(root);
-        //widgets.history_widget.parent().unwrap().show();
-        //root.set_child_visible(true);
-
         // Add widgets to main view
-        //println!("Is null");
         root.append(&widgets.history_widget);
-        //println!("After null");
 
         ComponentParts { model, widgets }
     }
