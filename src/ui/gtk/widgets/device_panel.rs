@@ -48,14 +48,14 @@ impl DeviceNotebookActions for DeviceNotebook {
 
     fn add_device(&self, name: &str, controllers: &mut DeviceViewControllers) {
         let tab_title = create_label(name);
-        //let device = create_device(name);
-        //let device = DeviceViewModel::new(name);
+
         let device_builder = DeviceViewModel::builder();
+
         let device_widget = device_builder.widget();
         self.inner().append_page(device_widget, Some(&tab_title));
+
         let controller = device_builder.launch(name.to_owned()).detach();
         controllers.push_back(controller);
-        //let a = device_builder.launch(()).detach();
     }
 
     fn remove_device(&self, name: String, device_views: &DeviceViews) {
@@ -67,10 +67,6 @@ impl DeviceNotebookActions for DeviceNotebook {
     }
 
     fn reorder_device(&self, name: String, device_views: &DeviceViews, from: u32, to: u32) {
-        //let c = self.0.page();
-        //self.0.pages().into_iter().for_each(|(a)| {
-            //let b: gtk::ScrolledWindow = a.unwrap().();
-        //});
         device_views.iter().for_each(|dev| {
             if dev.name == name {
                 let maybe_history_widget = self.inner().nth_page(Some(from));
@@ -82,14 +78,6 @@ impl DeviceNotebookActions for DeviceNotebook {
     }
 }
 
-//pub fn create_device(name: String) -> DeviceModel {
-    //let history_builder = HistoryViewModel::builder();
-    //let history_widget = history_builder.widget().to_owned();
-    //let history = history_builder.launch(()).detach();
-    //DeviceModel { name, history_widget, history }
-//}
-
-// Component
 impl Component for DevicePanelModel {
     type Input = DevicePanelAction;
     type Output = ();
