@@ -1,4 +1,4 @@
-use super::history::HistoryModel;
+use super::history::HistoryViewModel;
 use relm4::{
     gtk,
     ComponentSender,
@@ -10,7 +10,7 @@ use relm4::{
 #[derive(Debug)]
 pub struct DeviceViewModel {
     pub name: String, // This should be replaced with a wrapper struct of Device
-    pub history: Controller<HistoryModel>,
+    pub history: Controller<HistoryViewModel>,
 }
 
 #[derive(Debug)]
@@ -26,7 +26,7 @@ pub fn create_label(name: &str) -> gtk::Label {
 // Later on we'll replace this with a proper DeviceViewModel constructor
 impl DeviceViewModel {
     pub fn new(name: String) -> Self {
-        let history_builder = HistoryModel::builder();
+        let history_builder = HistoryViewModel::builder();
         //let history_widget = history_builder.widget().to_owned();
         let history = history_builder.launch(()).detach();
         Self { name, history }
@@ -52,7 +52,8 @@ impl Component for DeviceViewModel {
         sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
 
-        let history_builder = HistoryModel::builder();
+        // TODO: Use the builder directly to attach the object to the screen?
+        let history_builder = HistoryViewModel::builder();
         let history_widget = history_builder.widget().to_owned();
         let history = history_builder.launch(()).detach();
 
