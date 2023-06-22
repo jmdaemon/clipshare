@@ -71,44 +71,23 @@ impl Component for HistoryViewModel {
         sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
         
-        println!("Constructing HistoryViewModel");
+        info!("Constructing HistoryViewModel");
         // Create model
         let history = FactoryVecDeque::new(gtk::ListBox::default(), sender.input_sender());
-        let history = populate_history(history);
-        // Test history
+        let history = populate_history(history); // Test history
 
         // Set CSS
         // TODO: Create separate css file with global styles
         relm4::set_global_css_from_file("src/gtk/widgets/history.css");
 
         // Create widgets
-
         let history_window = HistoryPanel(history.widget().to_owned());
 
-        // Display the widgets
-        //let history_box = model.history.widget();
-        //widgets.history_panel.inner().set_child(Some(history_box));
-
-        //root.set_child(Some(widgets.history_panel.inner()));
-        //root.set_child(Some(history_box));
-
-        // Create model, widgets
         let model = HistoryViewModel { history };
-
         let widgets = HistoryViewWidgets { history_panel: history_window };
 
-        //widgets.history_panel.inner().set_parent(root);
-        //widgets.history_panel.inner().parent().unwrap().show();
-        //widgets.history_panel.inner().show();
-
-        //root.set_child(Some(widgets.history_panel.inner()));
-        //println!("Set root in widgets");
-        //root.set_child(Some(widgets.history_panel.inner()));
-        //root.set_child(Some(history.widget()));
+        // Add widgets to main view
         root.set_child(Some(widgets.history_panel.inner()));
-
-        //root.show();
-
         ComponentParts { model, widgets }
     }
 
