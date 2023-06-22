@@ -135,6 +135,9 @@ impl SimpleComponent for App {
         //let clients = tokio::task::spawn_blocking(async move { clients.populate() });
         let clients = futures::executor::block_on(clients.populate());
 
+
+
+
         //let history = HistoryViewModel::builder()
             //.launch(()).detach();
             //.launch(()).forward(sender.input_sender(), |msg| ());
@@ -149,7 +152,7 @@ impl SimpleComponent for App {
         //let device_view = DeviceView::builder().launch(()).detach();
         //let model = App { clients, history, device_dialog, device_view };
 
-        let device_panel = DevicePanelModel::builder().launch(()).detach();
+        let device_panel = DevicePanelModel::builder().launch(clients.clone()).detach();
 
         let model = App { clients, device_dialog, device_panel };
 

@@ -1,3 +1,5 @@
+use crate::connect::client::ClientPool;
+
 use super::device_view::{DeviceViewModel, create_label};
 use std::collections::VecDeque;
 use gtk::prelude::WidgetExt;
@@ -34,7 +36,7 @@ pub enum DevicePanelAction {
 // We create a newtype struct around GtkNotebook in order to more easily manage devices
 pub trait DeviceNotebookActions {
     fn inner(&self) -> &gtk::Notebook;
-    fn add_device(&self, name: String);
+    fn add_device(&self, name: &str);
     fn remove_device(&self, name: String, device_views: &DeviceViews);
     fn reorder_device(&self, name: String, device_views: &DeviceViews, from: u32, to: u32);
 }
@@ -42,7 +44,7 @@ pub trait DeviceNotebookActions {
 impl DeviceNotebookActions for DeviceNotebook {
     fn inner(&self) -> &gtk::Notebook { self.0.as_ref() }
 
-    fn add_device(&self, name: String) {
+    fn add_device(&self, name: &str) {
         let tab_title = create_label(&name);
         //let device = create_device(name);
         //let device = DeviceViewModel::new(name);
@@ -87,7 +89,7 @@ impl DeviceNotebookActions for DeviceNotebook {
 impl Component for DevicePanelModel {
     type Input = DevicePanelAction;
     type Output = ();
-    type Init = ();
+    type Init = ClientPool;
     type Widgets = DevicePanelWidgets;
     type Root = gtk::Notebook;
     type CommandOutput = ();
@@ -106,8 +108,14 @@ impl Component for DevicePanelModel {
         sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
         let device_views = VecDeque::new();
-        // Add the device views here
         let device_notebook = DeviceNotebook(root.to_owned());
+        // Add the device views here
+        let clients = init.clients.lock().unwrap();
+        clients.iter().for_each(|client| {
+            let client_unlock = client.device.lock().unwrap();
+            let name = client_unlock.name.as_ref();
+            device_notebook.add_device(name);
+        });
 
         // Create model
         let model = DevicePanelModel { device_views };
@@ -126,7 +134,7 @@ impl Component for DevicePanelModel {
         let device_notebook = &widgets.device_notebook;
         match message {
             DevicePanelAction::AddDevice(device_name) => {
-                device_notebook.add_device(device_name);
+                device_notebook.add_device(&device_name);
                 //self.device_views.push_back(device);
             },
             DevicePanelAction::RemoveDevice(device_name) => {
