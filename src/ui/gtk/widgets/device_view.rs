@@ -45,7 +45,7 @@ impl Component for DeviceViewModel {
         sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
 
-        println!("Constructing DeviceView");
+        info!("Constructing DeviceView");
         let history_builder = HistoryViewModel::builder();
         let history_widget = history_builder.widget().to_owned();
         let history = history_builder.launch(()).detach();
