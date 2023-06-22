@@ -1,187 +1,64 @@
-use std::ops::{Sub, SubAssign};
-
-use gtk::prelude::{
-    BoxExt,
-    ButtonExt,
-    OrientableExt,
-    WidgetExt,
-    //FrameExt,
-};
-
+use super::history_entry::HistoryLineEntry;
 use relm4::{
-    factory::{FactoryView, FactoryVecDeque},
+    factory::FactoryVecDeque,
     gtk,
-    prelude::{DynamicIndex, FactoryComponent},
     ComponentSender,
     ComponentParts,
-    FactorySender,
-    SimpleComponent,
-    RelmWidgetExt,
+    Component,
 };
 
-#[derive(Debug)]
-pub struct HistoryEntry {
-    pub index: DynamicIndex,
-    pub last_copied: String,
-}
-
-#[derive(Debug, Clone)]
-pub enum HistoryEntryInput {
-    //UpdateIndex(DynamicIndex),
-    DecrementIndex,
-    RefreshIndex,
-}
+pub type HistoryEntries = FactoryVecDeque<HistoryLineEntry>;
 
 #[derive(Debug)]
-pub enum HistoryEntryOutput {
-    CopyEntry(DynamicIndex),
-    DeleteEntry(DynamicIndex),
+pub struct HistoryViewModel {
+    pub history: HistoryEntries,
 }
 
-#[relm4::factory(pub)]
-impl FactoryComponent for HistoryEntry {
-    type Init = String;
-    type Input = HistoryEntryInput;
-    type Output = HistoryEntryOutput;
-    type CommandOutput = ();
-    type ParentInput = HistoryInput;
-    type ParentWidget = gtk::ListBox;
-
-    view! {
-        #[root]
-        root = gtk::Box {
-            set_orientation: gtk::Orientation::Horizontal,
-            set_spacing: 12,
-            set_hexpand: true,
-
-            #[name(lbl_index)]
-            gtk::Label {
-                #[watch]
-                set_label: &(self.index.current_index() + 1).to_string(),
-                set_width_chars: 8,
-                set_xalign: 0.6,
-            },
-
-            #[name(lbl_history_entry)]
-            gtk::Label {
-                set_css_classes: &["clipboard-entry"],
-                set_can_target: true,
-
-                #[watch]
-                set_label: &self.last_copied,
-                set_width_chars: 128,
-                set_xalign: 0.00,
-                //connect_clicked[sender] => move |_| {
-                //}
-                //connect_cursor_notify[sender] => move |_| {
-                    //println!("Changed cursor");
-                    //gtk::Widget::set_cursor(&self, gdk::Cursor::);
-                    //gtk::Window::new().set_cursor(gtk::Widget::set_cursor(&self, cursor));
-                //}
-            },
-
-            #[name(btn_copy)]
-            gtk::Button {
-                set_height_request: 24,
-                set_label: "Copy",
-                connect_clicked[sender, index] => move |_| {
-                    sender.output(HistoryEntryOutput::CopyEntry(index.clone()))
-                }
-            },
-
-            #[name(btn_delete)]
-            gtk::Button {
-                set_height_request: 24,
-                set_label: "Delete",
-                connect_clicked[sender, index] => move |_| {
-                    sender.output(HistoryEntryOutput::DeleteEntry(index.clone()))
-                }
-                //connect_clicked[sender, index] => move |_| {
-                    //let index = self.index.current_index();
-                    //sender.output(HistoryInput::DeleteEntry(index));
-                    //sender.output(HistoryInput::DeleteEntry(0));
-                    //sender.input(HistoryEntryInput::DeleteEntry);
-                //}
-            },
-        }
-    }
-
-    fn init_model(
-        init: Self::Init,
-        index: &DynamicIndex,
-        sender: FactorySender<Self>,
-    ) -> Self {
-        Self {
-            last_copied: init,
-            index: index.to_owned()
-        }
-    }
-
-    fn init_widgets(
-        &mut self,
-        index: &DynamicIndex,
-        root: &Self::Root,
-        _returned_widget: &<Self::ParentWidget as FactoryView>::ReturnedWidget,
-        sender: FactorySender<Self>,
-    ) -> Self::Widgets {
-        let widgets = view_output!();
-        widgets
-    }
-
-    fn output_to_parent_input(output: Self::Output) -> Option<HistoryInput> {
-        Some(match output {
-            HistoryEntryOutput::DeleteEntry(index) => HistoryInput::DeleteEntry(index),
-            HistoryEntryOutput::CopyEntry(index) => HistoryInput::CopyEntry(index),
-        })
-    }
-
-    fn update(&mut self, message: Self::Input, sender: FactorySender<Self>) {
-        match message {
-            HistoryEntryInput::DecrementIndex => {
-                if self.index.current_index() > 0 {
-                    self.index.current_index().sub_assign(1);
-                }
-                //self.index.current_index().sub(1);
-            },
-            HistoryEntryInput::RefreshIndex => {
-                self.index = self.index.to_owned();
-            },
-            //HistoryEntryInput::UpdateIndex(index) => {
-                //self.index = index;
-            //}
-        }
-    }
-
-}
+// Newtype wrapper for GtkScrolledWindow 
+#[derive(Debug)]
+pub struct HistoryPanel(gtk::ScrolledWindow);
 
 #[derive(Debug)]
-pub struct HistoryModel {
-    pub history: FactoryVecDeque<HistoryEntry>,
+pub struct HistoryViewWidgets {
+    pub history_panel: HistoryPanel,
 }
 
-#[derive(Debug)]
-pub enum HistoryInput {
-    CopyEntry(DynamicIndex),
-    DeleteEntry(DynamicIndex),
+pub trait HistoryPanelActions {
+    fn inner(&self) -> &gtk::ScrolledWindow;
 }
 
-#[derive(Debug)]
-pub enum HistoryOutput {}
+impl HistoryPanelActions for HistoryPanel {
+    fn inner(&self) -> &gtk::ScrolledWindow { self.0.as_ref() }
+}
 
-#[relm4::component(pub)]
-impl SimpleComponent for HistoryModel {
-    type Input = HistoryInput;
-    type Output = HistoryOutput;
+// Test out adding a few entries
+fn populate_history(mut history: HistoryEntries) {
+    let clipboard = vec![
+        "This".to_owned(),
+        "Will".to_owned(),
+        "Be".to_owned(),
+        "Copied".to_owned(),
+    ];
+
+    clipboard.into_iter().for_each(|line| {
+        /*
+        let index = history.guard().push_back(line);
+        history.guard().move_front(index.current_index());
+        */
+        let index = history.guard().push_back(line);
+    });
+}
+
+impl Component for HistoryViewModel {
+    type Input = ();
+    type Output = ();
     type Init = ();
+    type Root = gtk::ScrolledWindow;
+    type Widgets = HistoryViewWidgets;
+    type CommandOutput = ();
 
-    view! {
-        #[root]
-        gtk::ScrolledWindow {
-            gtk::ListBox {
-                #[local_ref]
-                history_box -> gtk::ListBox,
-            }
-        }
+    fn init_root() -> Self::Root {
+        gtk::ScrolledWindow::new()
     }
 
     fn init(
@@ -189,35 +66,28 @@ impl SimpleComponent for HistoryModel {
         root: &Self::Root,
         sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
-
+        
+        // Create model
         let mut history = FactoryVecDeque::new(gtk::ListBox::default(), sender.input_sender());
+        let model = HistoryViewModel { history };
 
-        // Test out adding a few entries
-        let clipboard = vec![
-            "This".to_owned(),
-            "Will".to_owned(),
-            "Be".to_owned(),
-            "Copied".to_owned(),
-        ];
-
-        clipboard.into_iter().for_each(|line| {
-            /*
-            let index = history.guard().push_back(line);
-            history.guard().move_front(index.current_index());
-            */
-            let index = history.guard().push_back(line);
-        });
-
-        let model = HistoryModel { history };
-
-        let history_box = model.history.widget();
+        // Set CSS
+        // TODO: Create separate css file with global styles
         relm4::set_global_css_from_file("src/gtk/widgets/history.css");
+        populate_history(history);
 
-        let widgets = view_output!();
-       
+        // Create widgets
+        let history_window = HistoryPanel(root.to_owned());
+        let widgets = HistoryViewWidgets { history_panel: history_window };
+
+        // Display the widgets
+        let history_box = model.history.widget();
+        widgets.history_panel.inner().set_child(Some(history_box));
+
         ComponentParts { model, widgets }
     }
 
+    /*
     fn update(&mut self, message: Self::Input, sender: ComponentSender<Self>) {
         match message {
             HistoryInput::DeleteEntry(index) => {
@@ -265,4 +135,5 @@ impl SimpleComponent for HistoryModel {
             }
         }
     }
+*/
 }
