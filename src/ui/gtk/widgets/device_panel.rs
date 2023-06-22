@@ -103,6 +103,7 @@ impl Component for DevicePanelModel {
         sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
         let device_views = VecDeque::new();
+        // Add the device views here
         let device_notebook = DeviceNotebook(root.to_owned());
 
         // Create model
