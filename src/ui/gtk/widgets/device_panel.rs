@@ -112,13 +112,13 @@ impl DeviceNotebookActions for DeviceNotebook {
 
 // Component
 //#[relm4::component(pub)]
-impl SimpleComponent for DevicePanelModel {
+impl Component for DevicePanelModel {
     type Input = DevicePanelAction;
     type Output = ();
     type Init = ();
     type Widgets = DevicePanelWidgets;
     type Root = gtk::Notebook;
-    //type CommandOutput = ();
+    type CommandOutput = ();
 
     //view! {
         //#[local_ref]
@@ -146,24 +146,24 @@ impl SimpleComponent for DevicePanelModel {
     ) -> ComponentParts<Self> {
         let device_views = VecDeque::new();
         // Create GtkNotebook
-        let notebook = gtk::Notebook::new();
-        notebook.set_hexpand(true);
-        notebook.set_vexpand(true);
+        //let notebook = gtk::Notebook::new();
+        //notebook.set_hexpand(true);
+        //notebook.set_vexpand(true);
 
-        let device_notebook = DeviceNotebook(notebook);
+        //let device_notebook = DeviceNotebook(notebook);
+        let device_notebook = DeviceNotebook(root.to_owned());
+
         // Create model
         let model = DevicePanelModel { device_views };
         let widgets = DevicePanelWidgets { device_notebook };
 
         ComponentParts { model, widgets }
     }
-    
-    //fn update_with_view(
+
+    //fn update(
         //&mut self,
-        //widgets: &mut Self::Widgets,
         //message: Self::Input,
         //sender: ComponentSender<Self>,
-        //root: &Self::Root
     //) {
         //match message {
             //DevicePanelAction::AddDevice(device_name) => {
@@ -184,4 +184,35 @@ impl SimpleComponent for DevicePanelModel {
             //}
         //}
     //}
+    
+    fn update_with_view(
+        &mut self,
+        widgets: &mut Self::Widgets,
+        message: Self::Input,
+        sender: ComponentSender<Self>,
+        root: &Self::Root
+    ) {
+        let device_notebook = &widgets.device_notebook;
+        match message {
+            DevicePanelAction::AddDevice(device_name) => {
+                // TODO: Device should be an already constructed object here
+                // TODO: This doesn't seem to actually add another
+                //let device = add_device(device_name, root);
+                //let device = add_device(device_name, root);
+                //(*self).add_device(device_name, root);
+                //let device = add_device(device_name, root);
+                //root.add_device(device_name);
+                //self.device_views.push_back(device);
+                device_notebook.add_device(device_name);
+            },
+            DevicePanelAction::RemoveDevice(device_name) => {
+                //root.remove_device(device_name, root, &self.device_views);
+                device_notebook.remove_device(device_name, &self.device_views);
+            },
+            DevicePanelAction::ReorderDevice(device_name, to) => {
+                //reorder_device(device_name, root, &self.device_views, to);
+                device_notebook.reorder_device(device_name, &self.device_views, to);
+            }
+        }
+    }
 }
