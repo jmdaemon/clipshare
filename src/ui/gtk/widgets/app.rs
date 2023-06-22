@@ -1,5 +1,5 @@
 use crate::{ui::gtk::widgets::{
-    history::HistoryViewModel,
+    history_view::HistoryViewModel,
     configure_dialog::{ConfigureDialog, ConfigureDialogInput},
     device_panel::DevicePanelModel,
 }, connect::client::ClientPool};

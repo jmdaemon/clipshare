@@ -76,10 +76,6 @@ impl Component for HistoryViewModel {
         let history = FactoryVecDeque::new(gtk::ListBox::default(), sender.input_sender());
         let history = populate_history(history); // Test history
 
-        // Set CSS
-        // TODO: Create separate css file with global styles
-        relm4::set_global_css_from_file("src/gtk/widgets/history.css");
-
         // Create widgets
         let history_window = HistoryPanel(history.widget().to_owned());
 

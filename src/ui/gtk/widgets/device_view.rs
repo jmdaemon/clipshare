@@ -1,4 +1,4 @@
-use super::history::HistoryViewModel;
+use super::history_view::HistoryViewModel;
 use relm4::{
     gtk::{self, traits::BoxExt},
     ComponentSender,
