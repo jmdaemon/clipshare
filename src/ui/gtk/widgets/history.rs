@@ -1,7 +1,7 @@
 use super::history_entry::HistoryLineEntry;
 use relm4::{
     factory::FactoryVecDeque,
-    gtk,
+    gtk::{self, traits::WidgetExt},
     ComponentSender,
     ComponentParts,
     Component,
@@ -16,7 +16,7 @@ pub struct HistoryViewModel {
 
 // Newtype wrapper for GtkScrolledWindow 
 #[derive(Debug)]
-pub struct HistoryPanel(gtk::ScrolledWindow);
+pub struct HistoryPanel(gtk::ListBox);
 
 #[derive(Debug)]
 pub struct HistoryViewWidgets {
@@ -24,11 +24,11 @@ pub struct HistoryViewWidgets {
 }
 
 pub trait HistoryPanelActions {
-    fn inner(&self) -> &gtk::ScrolledWindow;
+    fn inner(&self) -> &gtk::ListBox;
 }
 
 impl HistoryPanelActions for HistoryPanel {
-    fn inner(&self) -> &gtk::ScrolledWindow { self.0.as_ref() }
+    fn inner(&self) -> &gtk::ListBox { self.0.as_ref() }
 }
 
 // Test out adding a few entries
@@ -59,7 +59,10 @@ impl Component for HistoryViewModel {
     type CommandOutput = ();
 
     fn init_root() -> Self::Root {
-        gtk::ScrolledWindow::new()
+        gtk::ScrolledWindow::builder()
+            .hexpand(true)
+            .vexpand(true)
+            .build()
     }
 
     fn init(
@@ -68,23 +71,43 @@ impl Component for HistoryViewModel {
         sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
         
+        println!("Constructing HistoryViewModel");
         // Create model
         let history = FactoryVecDeque::new(gtk::ListBox::default(), sender.input_sender());
         let history = populate_history(history);
         // Test history
-        let model = HistoryViewModel { history };
 
         // Set CSS
         // TODO: Create separate css file with global styles
         relm4::set_global_css_from_file("src/gtk/widgets/history.css");
 
         // Create widgets
-        let history_window = HistoryPanel(root.to_owned());
-        let widgets = HistoryViewWidgets { history_panel: history_window };
+
+        let history_window = HistoryPanel(history.widget().to_owned());
 
         // Display the widgets
-        let history_box = model.history.widget();
-        widgets.history_panel.inner().set_child(Some(history_box));
+        //let history_box = model.history.widget();
+        //widgets.history_panel.inner().set_child(Some(history_box));
+
+        //root.set_child(Some(widgets.history_panel.inner()));
+        //root.set_child(Some(history_box));
+
+        // Create model, widgets
+        let model = HistoryViewModel { history };
+
+        let widgets = HistoryViewWidgets { history_panel: history_window };
+
+        //widgets.history_panel.inner().set_parent(root);
+        //widgets.history_panel.inner().parent().unwrap().show();
+        //widgets.history_panel.inner().show();
+
+        //root.set_child(Some(widgets.history_panel.inner()));
+        //println!("Set root in widgets");
+        //root.set_child(Some(widgets.history_panel.inner()));
+        //root.set_child(Some(history.widget()));
+        root.set_child(Some(widgets.history_panel.inner()));
+
+        //root.show();
 
         ComponentParts { model, widgets }
     }

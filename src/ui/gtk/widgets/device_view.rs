@@ -1,6 +1,6 @@
 use super::history::HistoryViewModel;
 use relm4::{
-    gtk,
+    gtk::{self, prelude::FileExt, traits::{FrameExt, WidgetExt, BoxExt}},
     ComponentSender,
     ComponentParts,
     Controller,
@@ -43,7 +43,14 @@ impl Component for DeviceViewModel {
     type CommandOutput = ();
 
     fn init_root() -> Self::Root {
-        gtk::Box::new(gtk::Orientation::Vertical, 6)
+        gtk::Box::builder()
+            .orientation(gtk::Orientation::Vertical)
+            .spacing(6)
+            .hexpand(true)
+            .vexpand(true)
+            .build()
+        //let gtkbox = gtk::Box::new(gtk::Orientation::Vertical, 6);
+        //gtkbox
     }
 
     fn init(
@@ -52,13 +59,25 @@ impl Component for DeviceViewModel {
         sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
 
+        println!("Constructing DeviceView");
         // TODO: Use the builder directly to attach the object to the screen?
         let history_builder = HistoryViewModel::builder();
+        //let history_builder = HistoryViewModel::builder();
+        //let history_widget = history_builder.widget().to_owned();
         let history_widget = history_builder.widget().to_owned();
         let history = history_builder.launch(()).detach();
 
         let model = DeviceViewModel { name: init, history };
         let widgets = DeviceViewWidgets { history_widget };
+
+        //widgets.history_widget.set_parent(root);
+        //widgets.history_widget.parent().unwrap().show();
+        //root.set_child_visible(true);
+
+        // Add widgets to main view
+        //println!("Is null");
+        root.append(&widgets.history_widget);
+        //println!("After null");
 
         ComponentParts { model, widgets }
     }
