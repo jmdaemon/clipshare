@@ -1,7 +1,7 @@
 use crate::{ui::gtk::widgets::{
-    history::HistoryModel,
+    history::HistoryViewModel,
     configure_dialog::{ConfigureDialog, ConfigureDialogInput},
-    device_view::DeviceView,
+    device_panel::DevicePanelModel,
 }, connect::client::ClientPool};
 
 use gtk::prelude::{
@@ -26,9 +26,8 @@ use relm4::{
 
 pub struct App {
     clients: ClientPool,
-    history: Controller<HistoryModel>,
     device_dialog: Controller<ConfigureDialog>,
-    device_view: Controller<DeviceView>
+    device_panel: Controller<DevicePanelModel>,
 }
 
 #[derive(Debug)]
@@ -48,7 +47,6 @@ impl SimpleComponent for App {
     type Init = AppInit;
 
     view! {
-
         gtk::Window {
             set_title: Some("Clipshare"),
             set_default_width: 640,
@@ -84,8 +82,10 @@ impl SimpleComponent for App {
                     set_vexpand: true,
 
                     #[local_ref]
-                    device_view_widget -> gtk::Notebook {
+                    device_panel_widget -> gtk::Notebook {
                     }
+                    //device_view_widget -> gtk::Notebook {
+                    //}
 
                     /*
                     gtk::Notebook {
@@ -135,8 +135,8 @@ impl SimpleComponent for App {
         //let clients = tokio::task::spawn_blocking(async move { clients.populate() });
         let clients = futures::executor::block_on(clients.populate());
 
-        let history = HistoryModel::builder()
-            .launch(()).detach();
+        //let history = HistoryViewModel::builder()
+            //.launch(()).detach();
             //.launch(()).forward(sender.input_sender(), |msg| ());
 
         let device_dialog = ConfigureDialog::builder()
@@ -146,12 +146,17 @@ impl SimpleComponent for App {
                 ////DialogOutput::Close => AppMsg::Close,
             //});
 
-        let device_view = DeviceView::builder().launch(()).detach();
-        let model = App { clients, history, device_dialog, device_view };
+        //let device_view = DeviceView::builder().launch(()).detach();
+        //let model = App { clients, history, device_dialog, device_view };
 
-        let history_widget = model.history.widget();
+        let device_panel = DevicePanelModel::builder().launch(()).detach();
+
+        let model = App { clients, device_dialog, device_panel };
+
+        //let history_widget = model.history.widget();
         model.device_dialog.widget().set_transient_for(Some(root));
-        let device_view_widget = model.device_view.widget();
+        //let device_view_widget = model.device_view.widget();
+        let device_panel_widget = model.device_panel.widget();
 
         let widgets = view_output!();
         ComponentParts { model, widgets }
