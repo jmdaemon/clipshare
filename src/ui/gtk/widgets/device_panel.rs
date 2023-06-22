@@ -1,7 +1,4 @@
-use super::{
-    history::HistoryModel,
-    device_view::DeviceModel
-};
+use super::device_view::{DeviceViewModel, create_label};
 use std::collections::VecDeque;
 use gtk::prelude::WidgetExt;
 use relm4::{
@@ -12,7 +9,7 @@ use relm4::{
 };
 
 // Types
-pub type DeviceViews = VecDeque<DeviceModel>;
+pub type DeviceViews = VecDeque<DeviceViewModel>;
 
 #[derive(Debug)]
 pub struct DevicePanelModel {
@@ -31,7 +28,7 @@ pub struct DevicePanelWidgets {
 pub enum DevicePanelAction {
     AddDevice(String),
     RemoveDevice(String),
-    ReorderDevice(String, u32),
+    ReorderDevice(String, u32, u32),
 }
 
 // We create a newtype struct around GtkNotebook in order to more easily manage devices
@@ -39,16 +36,20 @@ pub trait DeviceNotebookActions {
     fn inner(&self) -> &gtk::Notebook;
     fn add_device(&self, name: String);
     fn remove_device(&self, name: String, device_views: &DeviceViews);
-    fn reorder_device(&self, name: String, device_views: &DeviceViews, to: u32);
+    fn reorder_device(&self, name: String, device_views: &DeviceViews, from: u32, to: u32);
 }
 
 impl DeviceNotebookActions for DeviceNotebook {
     fn inner(&self) -> &gtk::Notebook { self.0.as_ref() }
 
     fn add_device(&self, name: String) {
-        let tab_title = create_device_tab_title(&name);
-        let device = create_device(name);
-        self.inner().append_page(&device.history_widget, Some(&tab_title));
+        let tab_title = create_label(&name);
+        //let device = create_device(name);
+        //let device = DeviceViewModel::new(name);
+        let device_builder = DeviceViewModel::builder();
+        let device_widget = device_builder.widget();
+        self.inner().append_page(device_widget, Some(&tab_title));
+        //let a = device_builder.launch(()).detach();
     }
 
     fn remove_device(&self, name: String, device_views: &DeviceViews) {
@@ -59,26 +60,28 @@ impl DeviceNotebookActions for DeviceNotebook {
         });
     }
 
-    fn reorder_device(&self, name: String, device_views: &DeviceViews, to: u32) {
+    fn reorder_device(&self, name: String, device_views: &DeviceViews, from: u32, to: u32) {
+        //let c = self.0.page();
+        //self.0.pages().into_iter().for_each(|(a)| {
+            //let b: gtk::ScrolledWindow = a.unwrap().();
+        //});
         device_views.iter().for_each(|dev| {
             if dev.name == name {
-                self.inner().reorder_child(&dev.history_widget, Some(to));
+                let maybe_history_widget = self.inner().nth_page(Some(from));
+                if let Some(history_widget) = maybe_history_widget {
+                    self.inner().reorder_child(&history_widget, Some(to));
+                }
             }
         });
     }
 }
 
-// Functions
-pub fn create_device_tab_title(name: &str) -> gtk::Label {
-    gtk::Label::new(Some(name))
-}
-
-pub fn create_device(name: String) -> DeviceModel {
-    let history_builder = HistoryModel::builder();
-    let history_widget = history_builder.widget().to_owned();
-    let history = history_builder.launch(()).detach();
-    DeviceModel { name, history_widget, history }
-}
+//pub fn create_device(name: String) -> DeviceModel {
+    //let history_builder = HistoryViewModel::builder();
+    //let history_widget = history_builder.widget().to_owned();
+    //let history = history_builder.launch(()).detach();
+    //DeviceModel { name, history_widget, history }
+//}
 
 // Component
 impl Component for DevicePanelModel {
@@ -129,8 +132,8 @@ impl Component for DevicePanelModel {
             DevicePanelAction::RemoveDevice(device_name) => {
                 device_notebook.remove_device(device_name, &self.device_views);
             },
-            DevicePanelAction::ReorderDevice(device_name, to) => {
-                device_notebook.reorder_device(device_name, &self.device_views, to);
+            DevicePanelAction::ReorderDevice(device_name, from, to) => {
+                device_notebook.reorder_device(device_name, &self.device_views, from, to);
             }
         }
     }
