@@ -103,10 +103,10 @@ impl Component for DevicePanelModel {
         let mut device_views_controllers = VecDeque::new();
         let device_notebook = DeviceNotebook(root.to_owned());
         // Add the device views here
-        println!("Constructing DevicePanel");
+        info!("Constructing DevicePanel");
         let clients = init.clients.lock().unwrap();
         clients.iter().for_each(|client| {
-            println!("Creating device");
+            info!("Creating device");
             let client_unlock = client.device.lock().unwrap();
             let name = client_unlock.name.as_ref();
             device_notebook.add_device(name, &mut device_views_controllers);
