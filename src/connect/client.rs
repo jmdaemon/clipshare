@@ -30,6 +30,7 @@ pub enum ClientMessage {
 
 pub type Clients = Arc<Mutex<Vec<Client>>>;
 
+#[derive(Clone)]
 pub struct ClientPool {
     pub clients: Clients,
 }
