@@ -1,22 +1,15 @@
-use std::ops::{Sub, SubAssign};
-
 use gtk::prelude::{
     BoxExt,
     ButtonExt,
     OrientableExt,
     WidgetExt,
-    //FrameExt,
 };
 
 use relm4::{
-    factory::{FactoryView, FactoryVecDeque},
+    factory::FactoryView,
     gtk,
     prelude::{DynamicIndex, FactoryComponent},
-    ComponentSender,
-    ComponentParts,
     FactorySender,
-    SimpleComponent,
-    RelmWidgetExt,
 };
 
 #[derive(Debug)]
