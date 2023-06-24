@@ -1,4 +1,4 @@
-use crate::{config::Config, create_config};
+use crate::{config::ConfigFile, create_config};
 
 use std::{
     collections::HashMap,
@@ -15,7 +15,7 @@ pub struct Settings {
     max_history: u64,
     shortcuts: Shortcuts,
     #[serde(skip)]
-    pub config: Config,
+    pub config: ConfigFile,
 }
 
 impl Default for Settings {
@@ -30,7 +30,7 @@ impl Default for Settings {
 }
 
 impl Settings {
-    pub fn new(&self, max_history: u64, shortcuts: Shortcuts, config: Config) -> Self {
+    pub fn new(&self, max_history: u64, shortcuts: Shortcuts, config: ConfigFile) -> Self {
         Settings { max_history, shortcuts, config }
     }
 
@@ -82,7 +82,7 @@ impl SettingsBuilder {
         self
     }
 
-    pub fn config(mut self, config: Config) -> Self {
+    pub fn config(mut self, config: ConfigFile) -> Self {
         self.settings.config = config;
         self
     }
