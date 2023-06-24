@@ -1,4 +1,4 @@
-use crate::config::Config;
+use crate::{config::Config, create_config};
 
 use std::{
     collections::HashMap,
@@ -24,7 +24,7 @@ impl Default for Settings {
         let shortcuts = HashMap::from([
             ("Enable/Disable Device".to_owned(), "Ctrl + {}".to_owned()),
         ]);
-        let config = Config::new("config.json");
+        let config = create_config("config.json");
         Settings { max_history, shortcuts, config }
     }
 }
