@@ -9,7 +9,7 @@ pub mod ui;
 // Use all the log macros automatically
 #[macro_use] extern crate log;
 
-use config::Config;
+use config::ConfigFile;
 use consts::{QUALIFIER, ORGANIZATION, APPLICATION};
 use directories::ProjectDirs;
 
@@ -34,8 +34,8 @@ pub fn create_project_dirs() -> ProjectDirs {
     project_dirs
 }
 
-pub fn create_config(file: impl Into<String>) -> Config {
+pub fn create_config(file: impl Into<String>) -> ConfigFile {
     let project_dirs = create_project_dirs();
     let config_dir = project_dirs.config_dir();
-    Config::new(config_dir, file)
+    ConfigFile::new(config_dir, file)
 }
