@@ -1,7 +1,7 @@
 #![feature(async_closure)]
 pub mod app;
 pub mod clipshare;
-pub mod config;
+pub mod cfgfile;
 pub mod connect;
 pub mod consts;
 pub mod ui;
@@ -9,7 +9,7 @@ pub mod ui;
 // Use all the log macros automatically
 #[macro_use] extern crate log;
 
-use config::ConfigFile;
+use cfgfile::ConfigFile;
 use consts::{QUALIFIER, ORGANIZATION, APPLICATION};
 use directories::ProjectDirs;
 
@@ -30,7 +30,7 @@ where
 
 pub fn create_project_dirs() -> ProjectDirs {
     let project_dirs = ProjectDirs::from(QUALIFIER, ORGANIZATION, APPLICATION)
-        .expect("Could not initialize project directories");
+        .expect("Could not initialize project directories")
     project_dirs
 }
 

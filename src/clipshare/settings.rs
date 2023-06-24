@@ -1,4 +1,4 @@
-use crate::{config::ConfigFile, create_config};
+use crate::{cfgfile::ConfigFile, create_config};
 
 use std::{
     collections::HashMap,
