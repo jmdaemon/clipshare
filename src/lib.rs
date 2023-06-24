@@ -1,5 +1,6 @@
 #![feature(async_closure)]
 pub mod app;
+pub mod clipboard;
 pub mod clipshare;
 pub mod cfgfile;
 pub mod connect;
@@ -29,9 +30,8 @@ where
 }
 
 pub fn create_project_dirs() -> ProjectDirs {
-    let project_dirs = ProjectDirs::from(QUALIFIER, ORGANIZATION, APPLICATION)
+    ProjectDirs::from(QUALIFIER, ORGANIZATION, APPLICATION)
         .expect("Could not initialize project directories")
-    project_dirs
 }
 
 pub fn create_config(file: impl Into<String>) -> ConfigFile {
