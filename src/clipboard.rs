@@ -15,6 +15,7 @@ impl ClipboardManager {
     pub fn new() ->  Self {
         Default::default()
     }
+
     pub fn get_clipboard_conts(&mut self) -> String {
         self.clipboard.get_contents().unwrap()
     }

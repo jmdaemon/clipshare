@@ -7,9 +7,10 @@ use clipshare::{
 #[macro_use] extern crate log;
 
 fn test_clipboard(dev: &mut Device) {
-    println!("{}", dev.get_clipboard_conts());
-    dev.set_clipboard_conts(String::from("saved-to-clipboard"));
-    println!("{}", dev.get_clipboard_conts());
+    let clipboard_manager = &mut dev.clipboard_manager;
+    println!("{}", clipboard_manager.get_clipboard_conts());
+    clipboard_manager.set_clipboard_conts(String::from("saved-to-clipboard"));
+    println!("{}", clipboard_manager.get_clipboard_conts());
 }
 
 fn main() {

@@ -73,7 +73,8 @@ fn cb_server_message_received(dev: &mut Dev, msg: Message, peer_map: &PeerMap, a
 
     println!("Copying to clipboard");
     let conts = msg.to_string().trim().to_string();
-    dev.lock().unwrap().set_clipboard_conts(conts);
+    let clipboard_manager = &mut dev.lock().unwrap().clipboard_manager;
+    clipboard_manager.set_clipboard_conts(conts);
 
     // We want to broadcast the message to everyone except ourselves.
     let broadcast_recipients =
@@ -123,9 +124,10 @@ pub async fn poll_client_connections(dev: Dev, srv: TcpListener, state: PeerMap)
 
 pub async fn clipboard_changed(dev: &Dev) -> String {
     let mut lock_dev = dev.lock().unwrap();
-    let conts = lock_dev.get_clipboard_conts();
+    let clipboard_manager = &mut lock_dev.clipboard_manager;
+    let conts = clipboard_manager.get_clipboard_conts();
     loop {
-        let now = lock_dev.get_clipboard_conts();
+        let now = clipboard_manager.get_clipboard_conts();
         if conts != now {
             break now;
         }
