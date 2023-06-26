@@ -1,5 +1,4 @@
-use crate::lines_from_file;
-use clipboard::{ClipboardContext, ClipboardProvider};
+use crate::{lines_from_file, clipboard::ClipboardManager};
 
 use std::{
     sync::{Arc, Mutex},
@@ -11,7 +10,7 @@ pub type Dev = Arc<Mutex<Device>>;
 pub struct Device {
     pub name: String,
     pub history: Vec<String>,
-    pub clipboard: ClipboardContext,
+    pub clipboard_manager: ClipboardManager,
 }
 
 // Implementations
@@ -25,16 +24,8 @@ pub struct Device {
 //}
 
 impl Device {
-    pub fn new(name: String, history: Vec<String>, clipboard: ClipboardContext) -> Device {
-        Device { name, history, clipboard }
-    }
-
-    pub fn get_clipboard_conts(&mut self) -> String {
-        self.clipboard.get_contents().unwrap()
-    }
-
-    pub fn set_clipboard_conts(&mut self, conts: String) {
-        self.clipboard.set_contents(conts).expect("Could not set contents of clipboard");
+    pub fn new(name: String, history: Vec<String>, clipboard_manager: ClipboardManager) -> Device {
+        Device { name, history, clipboard_manager }
     }
 }
 
@@ -50,8 +41,8 @@ impl DeviceBuilder {
     }
 
     pub fn build(&self) -> Device {
-        let clipboard: ClipboardContext = ClipboardProvider::new().unwrap();
-        Device { name: self.name.to_owned().unwrap(), history: self.history.to_owned().unwrap(), clipboard }
+        let clipboard_manager = ClipboardManager::new();
+        Device { name: self.name.to_owned().unwrap(), history: self.history.to_owned().unwrap(), clipboard_manager }
     }
 
     pub fn from_hostname(mut self) -> DeviceBuilder {
@@ -77,9 +68,9 @@ impl DeviceBuilder {
 
 // Helper test method to quickly initialize a dummy device
 pub fn init_device() -> Device {
-    let dev_ctx: ClipboardContext = ClipboardProvider::new().unwrap();
     let hostname = hostname::get();
-    let dev = Device::new(String::from("Device 1"), vec![String::from("asdf")], dev_ctx);
+    let clipboard_manager = ClipboardManager::new();
+    let dev = Device::new(String::from("Device 1"), vec![String::from("asdf")], clipboard_manager);
     info!("Device Name: {}", dev.name);
     info!("Device History:");
     dev.history.iter().for_each( |line| {
