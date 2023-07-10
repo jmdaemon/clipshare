@@ -60,9 +60,9 @@ pub type PeerMap = Arc<Mutex<HashMap<SocketAddr, Tx>>>;
 // Async
 /// Listen for client connections
 pub async fn setup_server(addr: String) -> TcpListener {
-    let try_socket = TcpListener::bind(addr.clone()).await;
-    let listener = try_socket.expect("Failed to bind");
-    println!("Listening on: {}", addr);
+    let listener = TcpListener::bind(&addr).await
+        .expect("Failed to bind");
+    println!("Listening on: {}", &addr);
     listener
 }
 
