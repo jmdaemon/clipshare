@@ -6,7 +6,8 @@ pub struct ClipboardManager {
 
 impl Default for ClipboardManager {
     fn default() -> Self {
-        let clipboard: ClipboardContext = ClipboardProvider::new().unwrap();
+        let clipboard: ClipboardContext = ClipboardProvider::new()
+            .expect("Could not create clipboard context");
         Self { clipboard }
     }
 }
